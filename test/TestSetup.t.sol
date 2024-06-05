@@ -6,7 +6,7 @@ import {Counter} from "../src/Counter.sol";
 
 contract TestSetup is Test {
     Counter public counter;
-
+    address alice = vm.addr(2);
     function setUp() public {
         counter = new Counter();
         counter.setNumber(0);
