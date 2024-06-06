@@ -9,6 +9,8 @@ contract Counter {
         string gender;
     }
     mapping(address => Profile) private profiles;
+    uint256 public numberOfProfiles;  // Counter for profiles
+
     event ProfileSet(
         address indexed user,
         string name,
@@ -20,7 +22,13 @@ contract Counter {
         string memory _name,
         uint8 _age,
         string memory _gender
-    ) public {
+    ) 
+    public {
+        // Check if profile already exists
+        if (bytes(profiles[msg.sender].name).length == 0) {
+            numberOfProfiles++;  // Increment counter if new profile
+        }
+
         profiles[msg.sender] = Profile({
             name: _name,
             age: _age,

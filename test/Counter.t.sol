@@ -100,4 +100,61 @@ function test_SetProfile() public {
         assertEq(retrievedGender, "F");
     }
 
+
+
+    function test_NumberOfProfiles() public {
+        setUp();
+        console.log("Testing NumberOfProfiles...");
+
+        // Initial number of profiles should be 0
+        assertEq(counter.numberOfProfiles(), 0);
+
+        string memory name1 = "Alice";
+        uint8 age1 = 30;
+        string memory gender1 = "F";
+        vm.prank(address(alice));
+        counter.setProfile(name1, age1, gender1);
+
+        // After setting profile for Alice, number of profiles should be 1
+        assertEq(counter.numberOfProfiles(), 1);
+
+        string memory name2 = "Bob";
+        uint8 age2 = 40;
+        string memory gender2 = "M";
+        vm.prank(address(bob));
+        counter.setProfile(name2, age2, gender2);
+
+        // After setting profile for Bob, number of profiles should be 2
+        assertEq(counter.numberOfProfiles(), 2);
+
+        // Re-setting profile for Alice shouldn't change the count
+        vm.prank(address(alice));
+        counter.setProfile("Alice Updated", 31, "F");
+        assertEq(counter.numberOfProfiles(), 2);
+
+        string memory name3 = "Charlie";
+        uint8 age3 = 50;
+        string memory gender3 = "M";
+        vm.prank(address(charlie));
+        counter.setProfile(name3, age3, gender3);
+
+        // After setting profile for Charlie, number of profiles should be 3
+        assertEq(counter.numberOfProfiles(), 3);
+
+        // Check the profiles
+        (string memory retrievedName, uint8 retrievedAge, string memory retrievedGender) = counter.getProfile(address(alice));
+        assertEq(retrievedName, "Alice Updated");
+        assertEq(retrievedAge, 31);
+        assertEq(retrievedGender, "F");
+
+        (retrievedName, retrievedAge, retrievedGender) = counter.getProfile(address(bob));
+        assertEq(retrievedName, "Bob");
+        assertEq(retrievedAge, 40);
+        assertEq(retrievedGender, "M");
+
+        (retrievedName, retrievedAge, retrievedGender) = counter.getProfile(address(charlie));
+        assertEq(retrievedName, "Charlie");
+        assertEq(retrievedAge, 50);
+        assertEq(retrievedGender, "M");
+    }
 }
