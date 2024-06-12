@@ -7,14 +7,14 @@ contract Counter {
     struct Profile {
         string name;
         uint8 age;
-        bool gender;//M or F
+        bool gender;//M or F true for male and false for female
         string country;
         Interest interest;
     }
 
-    mapping(address => Profile) private profiles;
+    mapping(address => Profile) public profiles;
     uint256 public numberOfProfiles;  // Counter for profiles
-    mapping(address => mapping(address => bool)) private matches;  // Tracks matches between users
+    mapping(address => mapping(address => bool)) public matches;  // Tracks matches between users
 
     event ProfileSet(
         address indexed user,
