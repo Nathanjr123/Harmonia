@@ -1,5 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED.
-//Additional changes to create dev branch 
+// SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
 contract Counter {
@@ -8,12 +7,13 @@ contract Counter {
     struct Profile {
         string name;
         uint8 age;
-        bool gender;//M or F true for male and false for female
+        bool gender; // M or F true for male and false for female
         string country;
         Interest interest;
     }
 
     mapping(address => Profile) public profiles;
+    mapping(address => mapping(address => bool)) public connections; // Tracks connections between users
     uint256 public numberOfProfiles;  // Counter for profiles
     mapping(address => mapping(address => bool)) public matches;  // Tracks matches between users
 
@@ -31,15 +31,18 @@ contract Counter {
         address indexed matchedWith
     );
 
+    event Connected(
+        address indexed user,
+        address indexed connectedWith
+    );
+
     function setProfile(
         string memory _name,
         uint8 _age,
         bool _gender,
         string memory _country,
         Interest _interest
-    ) 
-    public {
-        // Check if profile already exists
+    ) public {
         if (bytes(profiles[msg.sender].name).length == 0) {
             numberOfProfiles++;  // Increment counter if new profile
         }
@@ -51,6 +54,7 @@ contract Counter {
             country: _country,
             interest: _interest
         });
+
         emit ProfileSet(msg.sender, _name, _age, _gender, _country, _interest);
     }
 
@@ -73,17 +77,17 @@ contract Counter {
         return matches[_user1][_user2];
     }
 
-    uint256 private number;
+    function connectWith(address _user) public {
+        require(bytes(profiles[_user].name).length != 0, "User profile does not exist");
+        require(msg.sender != _user, "You cannot connect with yourself");
 
-    function setNumber(uint256 newNumber) public {
-        number = newNumber;
+        connections[msg.sender][_user] = true;
+        connections[_user][msg.sender] = true;
+
+        emit Connected(msg.sender, _user);
     }
 
-    function getNumber() public view returns (uint256) {
-        return number;
-    }
-
-    function increment() public {
-        number++;
+    function isConnectedWith(address _user1, address _user2) public view returns (bool) {
+        return connections[_user1][_user2];
     }
 }
