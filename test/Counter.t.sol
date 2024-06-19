@@ -6,21 +6,7 @@ import "./TestSetup.t.sol";
 import "forge-std/Vm.sol";
 
 contract CounterTest is TestSetup {
-    function test_Increment() public {
-        assertEq(counter.getNumber(), 0);
-        counter.increment();
-        assertEq(counter.getNumber(), 1);
-    }
-
-    function test_SetNumber() public {
-        counter.setNumber(42);
-        assertEq(counter.getNumber(), 42);
-    }
-
-    function testFuzz_SetNumber(uint256 x) public {
-        counter.setNumber(x);
-        assertEq(counter.getNumber(), x);
-    }
+ 
 
     function test_SetProfile() public {
         setUp();

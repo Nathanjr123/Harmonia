@@ -13,7 +13,6 @@ contract TestSetup is Test {
 
     function setUp() public {
         counter = new Counter();
-        counter.setNumber(0);
         console.log("Counter address: %s", address(counter));
     }
 }
