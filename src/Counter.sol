@@ -43,6 +43,10 @@ contract Counter {
         string memory _country,
         Interest _interest
     ) public {
+        require(bytes(_name).length > 0, "Invalid name");
+        require(_age < 255, "Invalid age");
+        require(bytes(_country).length > 0, "Invalid country");
+
         if (bytes(profiles[msg.sender].name).length == 0) {
             numberOfProfiles++;  // Increment counter if new profile
         }
@@ -58,16 +62,9 @@ contract Counter {
         emit ProfileSet(msg.sender, _name, _age, _gender, _country, _interest);
     }
 
-    function getProfile(
-        address _user
-    ) public view returns (string memory, uint8, bool, string memory, Interest) {
-        Profile memory profile = profiles[_user];
-        return (profile.name, profile.age, profile.gender, profile.country, profile.interest);
-    }
-
     function matchWith(address _user) public {
         require(msg.sender != _user, "You cannot match with yourself");
-        require(bytes(profiles[_user].name).length != 0, "User profile does not exist");
+        require(bytes(profiles[_user].name).length != 0, "Profile does not exist");
 
         matches[msg.sender][_user] = true;
         emit MatchMade(msg.sender, _user);
@@ -78,7 +75,7 @@ contract Counter {
     }
 
     function connectWith(address _user) public {
-        require(bytes(profiles[_user].name).length != 0, "User profile does not exist");
+        require(bytes(profiles[_user].name).length != 0, "Profile does not exist");
         require(msg.sender != _user, "You cannot connect with yourself");
 
         connections[msg.sender][_user] = true;
