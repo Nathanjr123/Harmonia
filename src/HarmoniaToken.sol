@@ -11,7 +11,7 @@ contract HarmoniaToken is ERC20, Ownable {
         _mint(to, amount);
     }
 
-    function burn(address from, uint256 amount) public onlyOwner {
-        _burn(from, amount);
+    function burn( uint256 amount) public {
+        _burn(msg.sender,amount); 
     }
 }
