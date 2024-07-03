@@ -7,15 +7,12 @@ import "../src/HarmoniaToken.sol";
 contract TestSetup is Test {
     HarmoniaToken public harmoniaToken;
 
-    address public owner = address(this);
-    address public addr1 = address(0x123);
+    address public owner = vm.addr(1);
+    address public addr1 = vm.addr(2);
 
     function setUp() public virtual {
+        vm.startPrank(owner);
         harmoniaToken = new HarmoniaToken();
-        harmoniaToken.transferOwnership(owner);
-    }
-
-    function setUpTests() internal {
-        // Additional setup if needed for specific tests
+        vm.stopPrank();
     }
 }
