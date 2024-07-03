@@ -18,7 +18,7 @@ contract HarmoniaTokenTest is TestSetup {
     }
 
     function testMintNotOwner() public {
-        setUp(); // Call setUp from TestSetup
+        setUp(); // pCall setUp from TestSetup
         vm.prank(addr1); // Set msg.sender to addr1 (not owner)
         vm.expectRevert("Ownable: caller is not the owner");
         harmoniaToken.mint(addr1, 1000);
