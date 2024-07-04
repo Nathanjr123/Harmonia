@@ -5,29 +5,32 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract HarmoniaToken is ERC20, Ownable {
-    error MintToZeroAddress();
-    error MintAmountZero();
-    error BurnAmountZero();
-    error BurnAmountExceedsBalance();
+    error InvalidAddress(address addr);
+    error InvalidAmount(uint256 amount);
 
     constructor() ERC20("Harmonia", "HRM") Ownable(msg.sender) {}
 
-    function mint(address to, uint256 amount) public onlyOwner {
-        if (to == address(0)) {
-            revert MintToZeroAddress();
+    modifier validAddress(address addr) {
+        if (addr == address(0)) {
+            revert InvalidAddress(addr);
         }
+        _;
+    }
+
+    modifier validAmount(uint256 amount) {
         if (amount == 0) {
-            revert MintAmountZero();
+            revert InvalidAmount(amount);
         }
+        _;
+    }
+
+    function mint(address to, uint256 amount) public onlyOwner validAddress(to) validAmount(amount) {
         _mint(to, amount);
     }
 
-    function burn(uint256 amount) public {
-        if (amount == 0) {
-            revert BurnAmountZero();
-        }
+    function burn(uint256 amount) public validAmount(amount) {
         if (amount > balanceOf(msg.sender)) {
-            revert BurnAmountExceedsBalance();
+            revert InvalidAmount(amount);
         }
         _burn(msg.sender, amount);
     }

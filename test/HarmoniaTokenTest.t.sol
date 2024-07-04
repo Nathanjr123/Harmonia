@@ -40,14 +40,24 @@ contract HarmoniaTokenTest is TestSetup {
 
     function testMintToZeroAddress() public {
         vm.startPrank(owner);
-        vm.expectRevert(HarmoniaToken.MintToZeroAddress.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                HarmoniaToken.InvalidAddress.selector,
+                address(0)
+            )
+        );
         harmoniaToken.mint(address(0), 1000);
         vm.stopPrank();
     }
 
     function testMintZeroAmount() public {
         vm.startPrank(owner);
-        vm.expectRevert(HarmoniaToken.MintAmountZero.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                HarmoniaToken.InvalidAmount.selector,
+                0
+            )
+        );
         harmoniaToken.mint(addr1, 0);
         vm.stopPrank();
     }
@@ -69,7 +79,12 @@ contract HarmoniaTokenTest is TestSetup {
         vm.stopPrank();
 
         vm.startPrank(addr1);
-        vm.expectRevert(HarmoniaToken.BurnAmountZero.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                HarmoniaToken.InvalidAmount.selector,
+                0
+            )
+        );
         harmoniaToken.burn(0);
         vm.stopPrank();
     }
@@ -80,7 +95,12 @@ contract HarmoniaTokenTest is TestSetup {
         vm.stopPrank();
 
         vm.startPrank(addr1);
-        vm.expectRevert(HarmoniaToken.BurnAmountExceedsBalance.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                HarmoniaToken.InvalidAmount.selector,
+                2000
+            )
+        );
         harmoniaToken.burn(2000);
         vm.stopPrank();
     }
