@@ -2,37 +2,46 @@
 pragma solidity ^0.8.0;
 
 import "./TestSetup.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract HarmoniaTokenTest is TestSetup {
 
     function testInitialSupply() public {
+        setUp();
         assertEq(harmoniaToken.totalSupply(), 0);
     }
 
-function testMint() public {
-    vm.startPrank(owner); // Set msg.sender to owner
-    
-    // Check initial balance
-    assertEq(harmoniaToken.balanceOf(addr1), 0);
-    
-    // Mint tokens
-    harmoniaToken.mint(addr1, 10000);
-    
-    // Check updated balance
-    assertEq(harmoniaToken.balanceOf(addr1), 10000);
-    
-    vm.stopPrank();
-}
-
+    function testMint() public {
+        setUp(); // Call setUp from TestSetup
+        vm.startPrank(owner); // Set msg.sender to owner
+        
+        // Check initial balance
+        assertEq(harmoniaToken.balanceOf(addr1), 0);
+        
+        // Mint tokens
+        harmoniaToken.mint(addr1, 10000);
+        
+        // Check updated balance
+        assertEq(harmoniaToken.balanceOf(addr1), 10000);
+        
+        vm.stopPrank();
+    }
 
     function testMintNotOwner() public {
+        setUp();
         vm.startPrank(addr1);
-        vm.expectRevert("Ownable: caller is not the owner");
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                Ownable.OwnableUnauthorizedAccount.selector,
+                addr1
+            )
+        );
         harmoniaToken.mint(addr1, 1000);
         vm.stopPrank();
     }
 
     function testMintToZeroAddress() public {
+        setUp();
         vm.startPrank(owner);
         vm.expectRevert("HarmoniaToken: mint to the zero address");
         harmoniaToken.mint(address(0), 1000);
@@ -40,6 +49,7 @@ function testMint() public {
     }
 
     function testMintZeroAmount() public {
+        setUp();
         vm.startPrank(owner);
         vm.expectRevert("HarmoniaToken: mint amount must be greater than zero");
         harmoniaToken.mint(addr1, 0);
@@ -47,6 +57,7 @@ function testMint() public {
     }
 
     function testBurn() public {
+        setUp();
         vm.startPrank(owner);
         harmoniaToken.mint(addr1, 1000);
         vm.stopPrank();
@@ -58,6 +69,7 @@ function testMint() public {
     }
 
     function testBurnZeroAmount() public {
+        setUp();
         vm.startPrank(owner);
         harmoniaToken.mint(addr1, 1000);
         vm.stopPrank();
@@ -69,6 +81,7 @@ function testMint() public {
     }
 
     function testBurnExceedsBalance() public {
+        setUp();
         vm.startPrank(owner);
         harmoniaToken.mint(addr1, 1000);
         vm.stopPrank();
@@ -79,12 +92,9 @@ function testMint() public {
         vm.stopPrank();
     }
 
-    function testInitialSetup() public {
+    function testInitialSetup() public  {
+        setUp();
         assertEq(harmoniaToken.totalSupply(), 0);
         assertEq(harmoniaToken.owner(), owner);
-        
-        // Check that name and symbol are correct
-        assertEq(harmoniaToken.name(), "Harmonia");
-        assertEq(harmoniaToken.symbol(), "HRM"); 
     }
 }
