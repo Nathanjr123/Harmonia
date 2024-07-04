@@ -7,12 +7,10 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract HarmoniaTokenTest is TestSetup {
 
     function testInitialSupply() public {
-        setUp();
         assertEq(harmoniaToken.totalSupply(), 0);
     }
 
     function testMint() public {
-        setUp(); // Call setUp from TestSetup
         vm.startPrank(owner); // Set msg.sender to owner
         
         // Check initial balance
@@ -28,7 +26,6 @@ contract HarmoniaTokenTest is TestSetup {
     }
 
     function testMintNotOwner() public {
-        setUp();
         vm.startPrank(addr1);
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -41,7 +38,6 @@ contract HarmoniaTokenTest is TestSetup {
     }
 
     function testMintToZeroAddress() public {
-        setUp();
         vm.startPrank(owner);
         vm.expectRevert("HarmoniaToken: mint to the zero address");
         harmoniaToken.mint(address(0), 1000);
@@ -49,7 +45,6 @@ contract HarmoniaTokenTest is TestSetup {
     }
 
     function testMintZeroAmount() public {
-        setUp();
         vm.startPrank(owner);
         vm.expectRevert("HarmoniaToken: mint amount must be greater than zero");
         harmoniaToken.mint(addr1, 0);
@@ -57,7 +52,6 @@ contract HarmoniaTokenTest is TestSetup {
     }
 
     function testBurn() public {
-        setUp();
         vm.startPrank(owner);
         harmoniaToken.mint(addr1, 1000);
         vm.stopPrank();
@@ -69,7 +63,6 @@ contract HarmoniaTokenTest is TestSetup {
     }
 
     function testBurnZeroAmount() public {
-        setUp();
         vm.startPrank(owner);
         harmoniaToken.mint(addr1, 1000);
         vm.stopPrank();
@@ -93,7 +86,6 @@ contract HarmoniaTokenTest is TestSetup {
     }
 
     function testInitialSetup() public  {
-        setUp();
         assertEq(harmoniaToken.totalSupply(), 0);
         assertEq(harmoniaToken.owner(), owner);
     }
