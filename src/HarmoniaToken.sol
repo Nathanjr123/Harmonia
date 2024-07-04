@@ -10,28 +10,25 @@ contract HarmoniaToken is ERC20, Ownable {
 
     constructor() ERC20("Harmonia", "HRM") Ownable(msg.sender) {}
 
-    modifier validAddress(address addr) {
-        if (addr == address(0)) {
-            revert InvalidAddress(addr);
+    function mint(address to, uint256 amount) public onlyOwner {
+        if (to == address(0)) {
+            revert InvalidAddress(to);
         }
-        _;
-    }
-
-    modifier validAmount(uint256 amount) {
         if (amount == 0) {
             revert InvalidAmount(amount);
         }
-        _;
-    }
-
-    function mint(address to, uint256 amount) public onlyOwner validAddress(to) validAmount(amount) {
+        
         _mint(to, amount);
     }
 
-    function burn(uint256 amount) public validAmount(amount) {
+    function burn(uint256 amount) public {
+        if (amount == 0) {
+            revert InvalidAmount(amount);
+        }
         if (amount > balanceOf(msg.sender)) {
             revert InvalidAmount(amount);
         }
+        
         _burn(msg.sender, amount);
     }
 }
