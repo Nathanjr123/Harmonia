@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import "./TestSetup.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "../src/HarmoniaToken.sol";
 
 contract HarmoniaTokenTest is TestSetup {
 
@@ -39,14 +40,14 @@ contract HarmoniaTokenTest is TestSetup {
 
     function testMintToZeroAddress() public {
         vm.startPrank(owner);
-        vm.expectRevert("HarmoniaToken: mint to the zero address");
+        vm.expectRevert(HarmoniaToken.MintToZeroAddress.selector);
         harmoniaToken.mint(address(0), 1000);
         vm.stopPrank();
     }
 
     function testMintZeroAmount() public {
         vm.startPrank(owner);
-        vm.expectRevert("HarmoniaToken: mint amount must be greater than zero");
+        vm.expectRevert(HarmoniaToken.MintAmountZero.selector);
         harmoniaToken.mint(addr1, 0);
         vm.stopPrank();
     }
@@ -68,24 +69,23 @@ contract HarmoniaTokenTest is TestSetup {
         vm.stopPrank();
 
         vm.startPrank(addr1);
-        vm.expectRevert("HarmoniaToken: burn amount must be greater than zero");
+        vm.expectRevert(HarmoniaToken.BurnAmountZero.selector);
         harmoniaToken.burn(0);
         vm.stopPrank();
     }
 
     function testBurnExceedsBalance() public {
-        setUp();
         vm.startPrank(owner);
         harmoniaToken.mint(addr1, 1000);
         vm.stopPrank();
 
         vm.startPrank(addr1);
-        vm.expectRevert("HarmoniaToken: burn amount exceeds balance");
+        vm.expectRevert(HarmoniaToken.BurnAmountExceedsBalance.selector);
         harmoniaToken.burn(2000);
         vm.stopPrank();
     }
 
-    function testInitialSetup() public  {
+    function testInitialSetup() public {
         assertEq(harmoniaToken.totalSupply(), 0);
         assertEq(harmoniaToken.owner(), owner);
     }
