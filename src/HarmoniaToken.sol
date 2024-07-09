@@ -39,7 +39,7 @@ contract HarmoniaToken is ERC20, Ownable {
         _mint(nftOwner, nftOwnerReward);
         _mint(originalOwner, originalOwnerReward);
     }
-
+   
     function _calculateReward(uint256 secondsListened) internal view returns (uint256) {
         uint256 minutesListened = secondsListened / 60;
         if (totalMinted < BASE_REWARD) {
