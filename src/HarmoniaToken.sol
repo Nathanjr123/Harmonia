@@ -8,27 +8,19 @@ contract HarmoniaToken is ERC20, Ownable {
     error InvalidAddress(address addr);
     error InvalidAmount(uint256 amount);
 
+    uint256 public constant MAX_SUPPLY = 500_000_000 ether;
+    uint256 public totalMinted;
+
     constructor() ERC20("Harmonia", "HRM") Ownable(msg.sender) {}
 
     function mint(address to, uint256 amount) public onlyOwner {
-        if (to == address(0)) {
-            revert InvalidAddress(to);
-        }
-        if (amount == 0) {
-            revert InvalidAmount(amount);
-        }
-        
+        require(totalMinted + amount <= MAX_SUPPLY, "Exceeds max supply");
         _mint(to, amount);
+        totalMinted += amount;
     }
 
     function burn(uint256 amount) public {
-        if (amount == 0) {
-            revert InvalidAmount(amount);
-        }
-        if (amount > balanceOf(msg.sender)) {
-            revert InvalidAmount(amount);
-        }
-        
+        require(amount > 0, "Amount must be greater than zero");
         _burn(msg.sender, amount);
     }
 }
