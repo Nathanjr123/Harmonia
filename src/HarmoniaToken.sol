@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
-// k
+
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
@@ -12,7 +12,7 @@ contract HarmoniaToken is ERC20, Ownable {
     uint256 public constant BASE_REWARD = 100_000_000 ether;
     uint256 public constant SECONDARY_REWARD = 100_000_000 ether;
     uint256 public constant THIRD_REWARD = 200_000_000 ether;
-    
+
     uint256 public totalMinted;
 
     mapping(uint256 => uint256) public nftListeningTime;
@@ -50,23 +50,31 @@ contract HarmoniaToken is ERC20, Ownable {
         } else if (totalMinted < BASE_REWARD + SECONDARY_REWARD + THIRD_REWARD) {
             return minutesListened / 5;
         } else {
-            // Placeholder for future reward phases
             return 0;
         }
     }
 
     function ownerOfNFT(uint256 nftId) public view returns (address) {
         // Implement logic to return the owner of the NFT
+        return address(0); // Placeholder
     }
 
     function mint(address to, uint256 amount) public onlyOwner {
-        require(totalMinted + amount <= MAX_SUPPLY, "Exceeds max supply");
+        if (to == address(0)) {
+            revert InvalidAddress(to);
+        }
+        if (amount == 0) {
+            revert InvalidAmount(amount);
+        }
         _mint(to, amount);
-        totalMinted += amount;
     }
 
+
     function burn(uint256 amount) public {
-        require(amount > 0, "Amount must be greater than zero");
+        if (amount == 0 || amount > balanceOf(msg.sender)) {
+            revert InvalidAmount(amount);
+        }
         _burn(msg.sender, amount);
     }
+
 }
