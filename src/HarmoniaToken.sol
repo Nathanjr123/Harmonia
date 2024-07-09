@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
-
+// k
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-//
+
 contract HarmoniaToken is ERC20, Ownable {
     error InvalidAddress(address addr);
     error InvalidAmount(uint256 amount);
@@ -11,6 +11,7 @@ contract HarmoniaToken is ERC20, Ownable {
     uint256 public constant MAX_SUPPLY = 500_000_000 ether;
     uint256 public constant BASE_REWARD = 100_000_000 ether;
     uint256 public constant SECONDARY_REWARD = 100_000_000 ether;
+    uint256 public constant THIRD_REWARD = 200_000_000 ether;
     
     uint256 public totalMinted;
 
@@ -39,13 +40,15 @@ contract HarmoniaToken is ERC20, Ownable {
         _mint(nftOwner, nftOwnerReward);
         _mint(originalOwner, originalOwnerReward);
     }
-   
+
     function _calculateReward(uint256 secondsListened) internal view returns (uint256) {
         uint256 minutesListened = secondsListened / 60;
         if (totalMinted < BASE_REWARD) {
             return minutesListened;
         } else if (totalMinted < BASE_REWARD + SECONDARY_REWARD) {
             return minutesListened / 2;
+        } else if (totalMinted < BASE_REWARD + SECONDARY_REWARD + THIRD_REWARD) {
+            return minutesListened / 5;
         } else {
             // Placeholder for future reward phases
             return 0;
