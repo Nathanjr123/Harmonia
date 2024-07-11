@@ -42,6 +42,21 @@ function burn(uint256 tokenId) public {
             revert("Owner already set");
         }
         nftOriginalOwner[nftId] = owner;
+
+    constructor() ERC721("HarmoniaNFT", "HNFT") Ownable(msg.sender) {}
+
+    function mint(address to, uint256 tokenId) public onlyOwner {
+        if (to == address(0)) {
+            revert InvalidTokenId(tokenId);
+        }
+        _mint(to, tokenId);
+    }
+
+    function burn(uint256 tokenId) public {
+        if (!_isApprovedOrOwner(msg.sender, tokenId)) {
+            revert NotApprovedOrOwner(msg.sender, tokenId);
+        }
+        _burn(tokenId);
     }
 
     function _isApprovedOrOwner(address spender, uint256 tokenId) internal view returns (bool) {
