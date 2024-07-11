@@ -8,7 +8,56 @@ contract HarmoniaToken is ERC20, Ownable {
     error InvalidAddress(address addr);
     error InvalidAmount(uint256 amount);
 
+    uint256 public constant MAX_SUPPLY = 500_000_000 ether;
+    uint256 public constant BASE_REWARD = 100_000_000 ether;
+    uint256 public constant SECONDARY_REWARD = 100_000_000 ether;
+    uint256 public constant THIRD_REWARD = 200_000_000 ether;
+
+    uint256 public totalMinted;
+
+    mapping(uint256 => uint256) public nftListeningTime;
+    mapping(uint256 => address) public nftOriginalOwner;
+
     constructor() ERC20("Harmonia", "HRM") Ownable(msg.sender) {}
+
+    function setNFTOriginalOwner(uint256 nftId, address owner) public onlyOwner {
+        nftOriginalOwner[nftId] = owner;
+    }
+
+    function updateListeningTime(uint256 nftId, uint256 secondsListened) public onlyOwner {
+        nftListeningTime[nftId] += secondsListened;
+        _rewardNFT(nftId, secondsListened);
+    }
+
+    function _rewardNFT(uint256 nftId, uint256 secondsListened) internal {
+        uint256 reward = _calculateReward(secondsListened);
+        uint256 originalOwnerReward = (reward * 5) / 100;
+        uint256 nftOwnerReward = reward - originalOwnerReward;
+
+        address nftOwner = ownerOfNFT(nftId);
+        address originalOwner = nftOriginalOwner[nftId];
+
+        _mint(nftOwner, nftOwnerReward);
+        _mint(originalOwner, originalOwnerReward);
+    }
+
+    function _calculateReward(uint256 secondsListened) internal view returns (uint256) {
+        uint256 minutesListened = secondsListened / 60;
+        if (totalMinted < BASE_REWARD) {
+            return minutesListened;
+        } else if (totalMinted < BASE_REWARD + SECONDARY_REWARD) {
+            return minutesListened / 2;
+        } else if (totalMinted < BASE_REWARD + SECONDARY_REWARD + THIRD_REWARD) {
+            return minutesListened / 5;
+        } else {
+            return 0;
+        }
+    }
+
+    function ownerOfNFT(uint256 nftId) public view returns (address) {
+        // Implement logic to return the owner of the NFT
+        return address(0); // Placeholder
+    }
 
     function mint(address to, uint256 amount) public onlyOwner {
         if (to == address(0)) {
@@ -17,18 +66,15 @@ contract HarmoniaToken is ERC20, Ownable {
         if (amount == 0) {
             revert InvalidAmount(amount);
         }
-        
         _mint(to, amount);
     }
 
+
     function burn(uint256 amount) public {
-        if (amount == 0) {
+        if (amount == 0 || amount > balanceOf(msg.sender)) {
             revert InvalidAmount(amount);
         }
-        if (amount > balanceOf(msg.sender)) {
-            revert InvalidAmount(amount);
-        }
-        
         _burn(msg.sender, amount);
     }
+
 }
