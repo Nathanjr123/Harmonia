@@ -8,15 +8,19 @@ contract HarmoniaNFT is ERC721, Ownable {
     error NotApprovedOrOwner(address addr, uint256 tokenId);
     error InvalidTokenId(uint256 tokenId);
     error InvalidAddress();
-    uint256 public tokenId = 1;
+
+    uint256 public currentTokenId = 1;
+    mapping(uint256 => address) public nftOriginalOwner;
+
     constructor() ERC721("HarmoniaNFT", "HNFT") Ownable(msg.sender) {}
 
     function mint(address to) public onlyOwner {
         if (to == address(0)) {
             revert InvalidAddress();
         }
-        _mint(to, tokenId);
-        tokenId++;
+        _mint(to, currentTokenId);
+        setNFTOriginalOwner(currentTokenId, to);
+        currentTokenId++;
     }
 
     function burn(uint256 tokenId) public {
@@ -24,6 +28,13 @@ contract HarmoniaNFT is ERC721, Ownable {
             revert NotApprovedOrOwner(msg.sender, tokenId);
         }
         _burn(tokenId);
+    }
+
+    function setNFTOriginalOwner(uint256 nftId, address owner) internal {
+        if (nftOriginalOwner[nftId] != address(0)) {
+            revert("Owner already set");
+        }
+        nftOriginalOwner[nftId] = owner;
     }
 
     function _isApprovedOrOwner(address spender, uint256 tokenId) internal view returns (bool) {
