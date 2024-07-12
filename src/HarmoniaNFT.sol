@@ -9,15 +9,10 @@ contract HarmoniaNFT is ERC721, Ownable {
     error InvalidTokenId(uint256 tokenId);
     error InvalidAddress();
 
-<<<<<<< HEAD
 
     uint256 public currentTokenId = 1;
     mapping(uint256 => address) public nftOriginalOwner;
     mapping(uint256 => bool) private _tokenExists; // Mapping to track token existence
-=======
-    uint256 public currentTokenId = 1;
-    mapping(uint256 => address) public nftOriginalOwner;
->>>>>>> e3ac18f16835a66716bdc2d430fe44857ac1b7cf
 
     constructor() ERC721("HarmoniaNFT", "HNFT") Ownable(msg.sender) {}
 
@@ -27,7 +22,6 @@ contract HarmoniaNFT is ERC721, Ownable {
         }
         _mint(to, currentTokenId);
         setNFTOriginalOwner(currentTokenId, to);
-<<<<<<< HEAD
         _tokenExists[currentTokenId] = true; // Mark token as existing
         currentTokenId++;
     }
@@ -48,28 +42,8 @@ function burn(uint256 tokenId) public {
             revert("Owner already set");
         }
         nftOriginalOwner[nftId] = owner;
-
-    constructor() ERC721("HarmoniaNFT", "HNFT") Ownable(msg.sender) {}
-
-    function mint(address to, uint256 tokenId) public onlyOwner {
-        if (to == address(0)) {
-            revert InvalidTokenId(tokenId);
-        }
-        _mint(to, tokenId);
-    }
-=======
-        currentTokenId++;
-    }
->>>>>>> e3ac18f16835a66716bdc2d430fe44857ac1b7cf
-
-    function burn(uint256 tokenId) public {
-        if (!_isApprovedOrOwner(msg.sender, tokenId)) {
-            revert NotApprovedOrOwner(msg.sender, tokenId);
-        }
-        _burn(tokenId);
     }
 
-<<<<<<< HEAD
     function _isApprovedOrOwner(address spender, uint256 tokenId) internal view returns (bool) {
         address owner = ownerOf(tokenId);
         return (spender == owner || getApproved(tokenId) == spender || isApprovedForAll(owner, spender));
@@ -78,17 +52,5 @@ function burn(uint256 tokenId) public {
     // Function to check if a token exists
     function tokenExists(uint256 tokenId) public view returns (bool) {
         return _tokenExists[tokenId];
-=======
-    function setNFTOriginalOwner(uint256 nftId, address owner) internal {
-        if (nftOriginalOwner[nftId] != address(0)) {
-            revert("Owner already set");
-        }
-        nftOriginalOwner[nftId] = owner;
-    }
-
-    function _isApprovedOrOwner(address spender, uint256 tokenId) internal view returns (bool) {
-        address owner = ownerOf(tokenId);
-        return (spender == owner || getApproved(tokenId) == spender || isApprovedForAll(owner, spender));
->>>>>>> e3ac18f16835a66716bdc2d430fe44857ac1b7cf
     }
 }

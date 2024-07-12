@@ -37,7 +37,6 @@ contract HarmoniaNFTTest is TestSetup {
         harmoniaNFT.burn(1);
         vm.stopPrank();
 
-<<<<<<< HEAD
 // vm.expectRevert(
 //     abi.encodeWithSelector(
 //         HarmoniaNFT.NotApprovedOrOwner.selector,
@@ -45,10 +44,6 @@ contract HarmoniaNFTTest is TestSetup {
 //         1  // Replace with the actual tokenId being tested
 //     )
 // );        harmoniaNFT.ownerOf(1);
-=======
-        vm.expectRevert("ERC721: invalid token ID");
-        harmoniaNFT.ownerOf(1);
->>>>>>> e3ac18f16835a66716bdc2d430fe44857ac1b7cf
     }
 
     function testBurnNotOwner() public {
