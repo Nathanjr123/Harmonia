@@ -12,7 +12,11 @@ contract HarmoniaNFTTest is TestSetup {
     function setUp() public override {
         super.setUp();
     }
-
+//Add test to assert that balace increases after minting
+//add tests for tokenexists mapping ensure it's updated correctly
+//test that tokenID increases
+//Test tokenexists function to ensure it returns the expected results
+//check that nft transfers conserves original owner
     function testMint() public {
         vm.startPrank(owner);
         harmoniaNFT.mint(addr1);
@@ -31,10 +35,15 @@ contract HarmoniaNFTTest is TestSetup {
     function testBurn() public {
         vm.startPrank(owner);
         harmoniaNFT.mint(addr1);
+        console.logUint(harmoniaNFT.balanceOf(addr1));
         vm.stopPrank();
+        assertEq(harmoniaNFT.balanceOf(addr1),1);
 
         vm.startPrank(addr1);
         harmoniaNFT.burn(1);
+        console.logUint(harmoniaNFT.balanceOf(addr1));
+        assertEq(harmoniaNFT.balanceOf(addr1),0);
+
         vm.stopPrank();
 
 // vm.expectRevert(

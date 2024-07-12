@@ -23,12 +23,12 @@ contract HarmoniaToken is ERC20, Ownable {
         harmoniaNFT = HarmoniaNFT(_HarmoniaNFTaddress);
     }
 
-    function updateListeningTime(uint256 nftId, uint256 secondsListened) public onlyOwner {
+    function updateListeningTime(uint256 nftId, uint256 secondsListened) public onlyOwner {//test this
         nftListeningTime[nftId] += secondsListened;
         _rewardNFT(nftId, secondsListened);
     }
 
-    function _rewardNFT(uint256 nftId, uint256 secondsListened) internal {
+    function _rewardNFT(uint256 nftId, uint256 secondsListened) internal {//test this 
         uint256 reward = _calculateReward(secondsListened);
         uint256 originalOwnerReward = (reward * 5) / 100;
         uint256 nftOwnerReward = reward - originalOwnerReward;
@@ -40,7 +40,7 @@ contract HarmoniaToken is ERC20, Ownable {
         _mint(originalOwner, originalOwnerReward);
     }
 
-    function _calculateReward(uint256 secondsListened) internal view returns (uint256) {
+    function _calculateReward(uint256 secondsListened) internal view returns (uint256) {//--test this
         uint256 minutesListened = ((secondsListened * 1e18) / 60) /1e18;
         if (totalMinted < BASE_REWARD) {
             return minutesListened;
@@ -57,7 +57,7 @@ contract HarmoniaToken is ERC20, Ownable {
         if (to == address(0)) {
             revert InvalidAddress(to);
         }
-        if (amount == 0) {
+        if (amount == 0) { 
             revert InvalidAmount(amount);
         }
         _mint(to, amount);

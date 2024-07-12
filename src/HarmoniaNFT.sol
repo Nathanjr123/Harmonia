@@ -25,16 +25,17 @@ contract HarmoniaNFT is ERC721, Ownable {
         _tokenExists[currentTokenId] = true; // Mark token as existing
         currentTokenId++;
     }
-function burn(uint256 tokenId) public {
-  require(_tokenExists[tokenId], "ERC721NonexistentToken"); // Check token existence
+    function burn(uint256 tokenId) public {
+    require(_tokenExists[tokenId], "ERC721NonexistentToken"); // Check token existence--test
 
-  if (!_isApprovedOrOwner(msg.sender, tokenId)) {
+    if (!_isApprovedOrOwner(msg.sender, tokenId)) {
+        revert NotApprovedOrOwner(msg.sender, tokenId);
+    }
     _burn(tokenId); // Burn the token if not approved or owner
-    revert NotApprovedOrOwner(msg.sender, tokenId);
-  }
 
-  _tokenExists[tokenId] = false; // Mark token as non-existing after burn
-}
+
+    _tokenExists[tokenId] = false; // Mark token as non-existing after burn--test
+    }
 
 
     function setNFTOriginalOwner(uint256 nftId, address owner) internal {
