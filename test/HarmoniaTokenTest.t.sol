@@ -104,7 +104,39 @@ contract HarmoniaTokenTest is TestSetup {
         harmoniaToken.burn(2000);
         vm.stopPrank();
     }
+     // Test updating listening time and reward distribution
+    function testUpdateListeningTime() public {
+        vm.startPrank(owner);
 
+        // Set up initial listening time and verify initial balances
+        uint256 nftId = 1;
+        harmoniaNFT.mint(addr1);
+        uint256 initialSecondsListened = 600; // 10 minutes
+        harmoniaToken.updateListeningTime(nftId, initialSecondsListened);
+
+        uint256 expectedReward = 10; // 10 minutes of listening time
+        uint256 originalOwnerReward = (expectedReward * 5) / 100;
+        uint256 nftOwnerReward = expectedReward - originalOwnerReward;
+
+        // Check rewards
+        assertEq(harmoniaToken.balanceOf(addr1), nftOwnerReward);
+        assertEq(harmoniaToken.balanceOf(owner), originalOwnerReward);
+
+        // Update listening time again
+        uint256 additionalSecondsListened = 1200; // 20 minutes
+        harmoniaToken.updateListeningTime(nftId, additionalSecondsListened);
+
+        uint256 totalSecondsListened = initialSecondsListened + additionalSecondsListened;
+        uint256 totalReward = totalSecondsListened / 60; // Total minutes listened
+        originalOwnerReward = (totalReward * 5) / 100;
+        nftOwnerReward = totalReward - originalOwnerReward;
+
+        // Check updated rewards
+        assertEq(harmoniaToken.balanceOf(addr1), nftOwnerReward);
+        assertEq(harmoniaToken.balanceOf(owner), originalOwnerReward);
+
+        vm.stopPrank();
+    }
     function testInitialSetup() public {
         assertEq(harmoniaToken.totalSupply(), 0);
         assertEq(harmoniaToken.owner(), owner);
