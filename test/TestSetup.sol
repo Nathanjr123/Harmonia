@@ -11,6 +11,8 @@ contract TestSetup is Test {
     HarmoniaNFT public harmoniaNFT;
     address public owner = vm.addr(1);
     address public addr1 = vm.addr(2);
+    address public addr2 = vm.addr(3);
+
     
 
     function setUp() public virtual {

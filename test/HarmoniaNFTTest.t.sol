@@ -7,16 +7,11 @@ import "../src/HarmoniaNFT.sol";
 
 contract HarmoniaNFTTest is TestSetup {
 
-    address public addr2 = vm.addr(3);
 
     function setUp() public override {
         super.setUp();
     }
-//Add test to assert that balace increases after minting
-//add tests for tokenexists mapping ensure it's updated correctly
-//test that tokenID increases
-//Test tokenexists function to ensure it returns the expected results
-//check that nft transfers conserves original owner
+
     function testMint() public {
         vm.startPrank(owner);
         harmoniaNFT.mint(addr1);
@@ -27,7 +22,7 @@ contract HarmoniaNFTTest is TestSetup {
 
     function testMintToZeroAddress() public {
         vm.startPrank(owner);
-        vm.expectRevert(HarmoniaNFT.InvalidAddress.selector);
+        vm.expectRevert(abi.encodeWithSelector(HarmoniaNFT.InvalidAddress.selector));
         harmoniaNFT.mint(address(0));
         vm.stopPrank();
     }
@@ -35,24 +30,13 @@ contract HarmoniaNFTTest is TestSetup {
     function testBurn() public {
         vm.startPrank(owner);
         harmoniaNFT.mint(addr1);
-        console.logUint(harmoniaNFT.balanceOf(addr1));
         vm.stopPrank();
-        assertEq(harmoniaNFT.balanceOf(addr1),1);
+        assertEq(harmoniaNFT.balanceOf(addr1), 1);
 
         vm.startPrank(addr1);
         harmoniaNFT.burn(1);
-        console.logUint(harmoniaNFT.balanceOf(addr1));
-        assertEq(harmoniaNFT.balanceOf(addr1),0);
-
+        assertEq(harmoniaNFT.balanceOf(addr1), 0);
         vm.stopPrank();
-
-// vm.expectRevert(
-//     abi.encodeWithSelector(
-//         HarmoniaNFT.NotApprovedOrOwner.selector,
-//         msg.sender,
-//         1  // Replace with the actual tokenId being tested
-//     )
-// );        harmoniaNFT.ownerOf(1);
     }
 
     function testBurnNotOwner() public {
@@ -61,13 +45,7 @@ contract HarmoniaNFTTest is TestSetup {
         vm.stopPrank();
 
         vm.startPrank(addr2);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                HarmoniaNFT.NotApprovedOrOwner.selector,
-                addr2,
-                1
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(HarmoniaNFT.NotApprovedOrOwner.selector, addr2, 1));
         harmoniaNFT.burn(1);
         vm.stopPrank();
     }
@@ -79,7 +57,47 @@ contract HarmoniaNFTTest is TestSetup {
 
         // Attempt to mint again should not revert because owner is being set correctly
         vm.startPrank(owner);
+        harmoniaNFT.mint(addr1);
+        vm.stopPrank();
+    }
+
+    function testBalanceIncreasesAfterMinting() public {
+        vm.startPrank(owner);
+        harmoniaNFT.mint(addr1);
+        assertEq(harmoniaNFT.balanceOf(addr1), 1);
+        harmoniaNFT.mint(addr1);
+        assertEq(harmoniaNFT.balanceOf(addr1), 2);
+        vm.stopPrank();
+    }
+
+    function testTokenExistsFunction() public {
+        vm.startPrank(owner);
+        harmoniaNFT.mint(addr1);
+        assertTrue(harmoniaNFT.tokenExists(1));
         harmoniaNFT.mint(addr2);
+        assertTrue(harmoniaNFT.tokenExists(2));
+        harmoniaNFT.burn(1);
+        assertFalse(harmoniaNFT.tokenExists(1));
+        vm.stopPrank();
+    }
+
+    function testNFTTransfersConserveOriginalOwner() public {
+        vm.startPrank(owner);
+        harmoniaNFT.mint(addr1);
+        vm.stopPrank();
+
+        vm.startPrank(addr1);
+        harmoniaNFT.transferFrom(addr1, addr2, 1);
+        assertEq(harmoniaNFT.nftOriginalOwner(1), addr1);
+        vm.stopPrank();
+    }
+
+    function testTokenIdIncreases() public {
+        vm.startPrank(owner);
+        harmoniaNFT.mint(addr1);
+        assertEq(harmoniaNFT.currentTokenId(), 2);
+        harmoniaNFT.mint(addr1);
+        assertEq(harmoniaNFT.currentTokenId(), 3);
         vm.stopPrank();
     }
 }
