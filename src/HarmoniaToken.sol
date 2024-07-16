@@ -4,6 +4,7 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./HarmoniaNFT.sol";
+import "forge-std/console.sol";
 
 contract HarmoniaToken is ERC20, Ownable {
     error InvalidAddress(address addr);
@@ -23,15 +24,25 @@ contract HarmoniaToken is ERC20, Ownable {
         harmoniaNFT = HarmoniaNFT(_HarmoniaNFTaddress);
     }
 
-   function updateListeningTime(uint256 nftId, uint256 secondsListened) public onlyOwner {//test this
+    // for testing purposes (this should be removed in production)
+    function setTotalMinted(uint256 _totalMinted) public {
+        totalMinted = _totalMinted;
+    }
+
+    function updateListeningTime(uint256 nftId, uint256 secondsListened) public onlyOwner {
         nftListeningTime[nftId] += secondsListened;
         _rewardNFT(nftId, secondsListened);
     }
 
-    function _rewardNFT(uint256 nftId, uint256 secondsListened) internal {//test this 
+    function _rewardNFT(uint256 nftId, uint256 secondsListened) public {
         uint256 reward = _calculateReward(secondsListened);
-        uint256 originalOwnerReward = (reward * 5) / 100;
-        uint256 nftOwnerReward = reward - originalOwnerReward;
+
+        // Calculate rewards in basis points
+        uint256 originalOwnerBasisPoints = 500; // 5%
+        uint256 nftOwnerBasisPoints = 9500; // 95%
+
+        uint256 originalOwnerReward = (reward * originalOwnerBasisPoints) / 10000;
+        uint256 nftOwnerReward = (reward * nftOwnerBasisPoints) / 10000;
 
         address nftOwner = harmoniaNFT.ownerOf(nftId);
         address originalOwner = harmoniaNFT.nftOriginalOwner(nftId);
@@ -40,30 +51,37 @@ contract HarmoniaToken is ERC20, Ownable {
         _mint(originalOwner, originalOwnerReward);
     }
 
-    function _calculateReward(uint256 secondsListened) internal view returns (uint256) {//--test this
-        uint256 minutesListened = ((secondsListened * 1e18) / 60) /1e18;
-        if (totalMinted < BASE_REWARD) {
-            return minutesListened;
-        } else if (totalMinted < BASE_REWARD + SECONDARY_REWARD) {
-            return minutesListened / 2;
-        } else if (totalMinted < BASE_REWARD + SECONDARY_REWARD + THIRD_REWARD) {
-            return minutesListened / 5;
-        } else {
-            return 0;
-        }
-    }
+    function _calculateReward(uint256 secondsListened) public returns (uint256) {
+        totalMinted = totalSupply();
+        console.log("totalMinted: ", totalMinted);
 
+        uint256 rewardBasisPoints;
+
+        if (totalMinted < BASE_REWARD) {
+            rewardBasisPoints = 17;  // Approximately 1/600 as basis points
+        } else if (totalMinted < BASE_REWARD + SECONDARY_REWARD) {
+            rewardBasisPoints = 8;  // Approximately 1/1200 as basis points
+        } else if (totalMinted < BASE_REWARD + SECONDARY_REWARD + THIRD_REWARD) {
+            rewardBasisPoints = 3;  // Approximately 1/3000 as basis points
+        } else {
+            rewardBasisPoints = 0;
+        }
+
+        uint256 reward = (secondsListened * 1 ether * rewardBasisPoints) / 10000;
+        console.log("Reward: ", reward);
+        return reward;
+    }
 
     function mint(address to, uint256 amount) public onlyOwner {
         if (to == address(0)) {
             revert InvalidAddress(to);
         }
-        if (amount == 0) { 
+        if (amount == 0) {
             revert InvalidAmount(amount);
         }
         _mint(to, amount);
+        totalMinted += amount;
     }
-
 
     function burn(uint256 amount) public {
         if (amount == 0 || amount > balanceOf(msg.sender)) {
@@ -71,5 +89,4 @@ contract HarmoniaToken is ERC20, Ownable {
         }
         _burn(msg.sender, amount);
     }
-
 }

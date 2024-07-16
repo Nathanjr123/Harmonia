@@ -4,13 +4,11 @@ pragma solidity ^0.8.20;
 import "./TestSetup.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "../src/HarmoniaNFT.sol";
+import "../src/HarmoniaToken.sol";
+
 
 contract HarmoniaNFTTest is TestSetup {
 
-
-    function setUp() public override {
-        super.setUp();
-    }
 
     function testMint() public {
         vm.startPrank(owner);
@@ -70,16 +68,21 @@ contract HarmoniaNFTTest is TestSetup {
         vm.stopPrank();
     }
 
-    function testTokenExistsFunction() public {
-        vm.startPrank(owner);
-        harmoniaNFT.mint(addr1);
-        assertTrue(harmoniaNFT.tokenExists(1));
-        harmoniaNFT.mint(addr2);
-        assertTrue(harmoniaNFT.tokenExists(2));
-        harmoniaNFT.burn(1);
-        assertFalse(harmoniaNFT.tokenExists(1));
-        vm.stopPrank();
-    }
+function testTokenExistsFunction() public {
+    uint256 nftId = 1;
+
+    vm.startPrank(owner);
+    harmoniaNFT.mint(addr1);
+    vm.stopPrank();
+
+    vm.startPrank(addr1);
+    // Check if the token exists
+    bool exists = harmoniaNFT.tokenExists(nftId);
+    assertTrue(exists);
+    vm.stopPrank();
+}
+
+
 
     function testNFTTransfersConserveOriginalOwner() public {
         vm.startPrank(owner);

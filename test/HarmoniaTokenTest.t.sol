@@ -104,7 +104,7 @@ contract HarmoniaTokenTest is TestSetup {
         harmoniaToken.burn(2000);
         vm.stopPrank();
     }
-     // Test updating listening time and reward distribution
+ // Test updating listening time and reward distribution
     function testUpdateListeningTime() public {
         vm.startPrank(owner);
 
@@ -114,8 +114,8 @@ contract HarmoniaTokenTest is TestSetup {
         uint256 initialSecondsListened = 600; // 10 minutes
         harmoniaToken.updateListeningTime(nftId, initialSecondsListened);
 
-        uint256 expectedReward = 10; // 10 minutes of listening time
-        uint256 originalOwnerReward = (expectedReward * 5) / 100;
+        uint256 expectedReward = (initialSecondsListened * 1 ether * 17) / 10000; // 1/600 as basis points
+        uint256 originalOwnerReward = (expectedReward * 500) / 10000; // 5% to original owner
         uint256 nftOwnerReward = expectedReward - originalOwnerReward;
 
         // Check rewards
@@ -127,8 +127,9 @@ contract HarmoniaTokenTest is TestSetup {
         harmoniaToken.updateListeningTime(nftId, additionalSecondsListened);
 
         uint256 totalSecondsListened = initialSecondsListened + additionalSecondsListened;
-        uint256 totalReward = totalSecondsListened / 60; // Total minutes listened
-        originalOwnerReward = (totalReward * 5) / 100;
+        uint256 totalReward = ((initialSecondsListened * 1 ether * 17) / 10000) +
+                              ((additionalSecondsListened * 1 ether * 17) / 10000); // Combined rewards
+        originalOwnerReward = (totalReward * 500) / 10000; // 5% to original owner
         nftOwnerReward = totalReward - originalOwnerReward;
 
         // Check updated rewards
