@@ -51,26 +51,17 @@ contract HarmoniaToken is ERC20, Ownable {
         _mint(originalOwner, originalOwnerReward);
     }
 
-    function _calculateReward(uint256 secondsListened) public returns (uint256) {
-        totalMinted = totalSupply();
-        console.log("totalMinted: ", totalMinted);
+    
+function _calculateReward(uint256 secondsListened) public returns (uint256) {
+    totalMinted = totalSupply();
+    console.log("totalMinted: ", totalMinted);
 
-        uint256 rewardBasisPoints;
+    uint256 rewardBasisPoints = 17;  // Approximately 1/600 as basis points
 
-        if (totalMinted < BASE_REWARD) {
-            rewardBasisPoints = 17;  // Approximately 1/600 as basis points
-        } else if (totalMinted < BASE_REWARD + SECONDARY_REWARD) {
-            rewardBasisPoints = 8;  // Approximately 1/1200 as basis points
-        } else if (totalMinted < BASE_REWARD + SECONDARY_REWARD + THIRD_REWARD) {
-            rewardBasisPoints = 3;  // Approximately 1/3000 as basis points
-        } else {
-            rewardBasisPoints = 0;
-        }
-
-        uint256 reward = (secondsListened * 1 ether * rewardBasisPoints) / 10000;
-        console.log("Reward: ", reward);
-        return reward;
-    }
+    uint256 reward = (secondsListened * 1 ether * rewardBasisPoints) / 10000;
+    console.log("Reward: ", reward);
+    return reward;
+}
 
     function mint(address to, uint256 amount) public onlyOwner {
         if (to == address(0)) {

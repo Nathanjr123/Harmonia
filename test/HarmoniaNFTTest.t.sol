@@ -103,4 +103,9 @@ function testTokenExistsFunction() public {
         assertEq(harmoniaNFT.currentTokenId(), 3);
         vm.stopPrank();
     }
+    // Helper function to assert equality within a tolerance
+function assertApproxEq(uint256 actual, uint256 expected, uint256 tolerance) internal {
+    require(actual >= expected - tolerance && actual <= expected + tolerance, "Value not within tolerance range");
+}
+
 }
