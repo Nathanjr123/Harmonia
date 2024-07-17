@@ -54,13 +54,11 @@ function testBurnNonexistentToken() public {
 
     // Attempt to burn a token that doesn't exist
     vm.startPrank(addr1);
-    try harmoniaNFT.burn(999) {
-        revert("Expected NonexistentToken error");
-    } catch (bytes memory error) {
-        assertTrue(keccak256(error) == keccak256(abi.encodeWithSignature("NonexistentToken(uint256)", 999)), "Expected NonexistentToken error");
-    }
+    vm.expectRevert(abi.encodeWithSelector(HarmoniaNFT.NonexistentToken.selector, 999));
+    harmoniaNFT.burn(999); // This call should trigger the revert
     vm.stopPrank();
 }
+
 
 
     function testSetNFTOriginalOwner() public {
@@ -100,19 +98,25 @@ function testTokenExistsFunction() public {
 
 
     function testNFTTransfersConserveOriginalOwner() public {
-        vm.startPrank(owner);
-        harmoniaNFT.mint(addr1);
-        vm.stopPrank();
+    vm.startPrank(owner);
+    harmoniaNFT.mint(addr1);
+    vm.stopPrank();
 
-        vm.startPrank(addr1);
-        harmoniaNFT.transferFrom(addr1, addr2, 1);
-        // Assert that the original owner is still addr1
-        assertEq(harmoniaNFT.nftOriginalOwner(1), addr1, "Original owner mismatch");
+    // Assert that addr1 is the current owner and original owner before transfer
+    assertEq(harmoniaNFT.ownerOf(1), addr1, "Initial owner mismatch");
+    assertEq(harmoniaNFT.nftOriginalOwner(1), addr1, "Initial original owner mismatch");
 
-        // Assert that the current owner is now addr2
-        assertEq(harmoniaNFT.ownerOf(1), addr2, "Current owner mismatch");
-        vm.stopPrank();
-    }
+    vm.startPrank(addr1);
+    harmoniaNFT.transferFrom(addr1, addr2, 1);
+
+    // Assert that the original owner is still addr1
+    assertEq(harmoniaNFT.nftOriginalOwner(1), addr1, "Original owner mismatch");
+
+    // Assert that the current owner is now addr2
+    assertEq(harmoniaNFT.ownerOf(1), addr2, "Current owner mismatch");
+    vm.stopPrank();
+}
+
 
     function testTokenIdIncreases() public {
         vm.startPrank(owner);
@@ -122,9 +126,6 @@ function testTokenExistsFunction() public {
         assertEq(harmoniaNFT.currentTokenId(), 3);
         vm.stopPrank();
     }
-    // Helper function to assert equality within a tolerance
-function assertApproxEq(uint256 actual, uint256 expected, uint256 tolerance) internal {
-    require(actual >= expected - tolerance && actual <= expected + tolerance, "Value not within tolerance range");
-}
+
 
 }
