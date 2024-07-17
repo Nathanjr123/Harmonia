@@ -34,34 +34,51 @@ contract HarmoniaToken is ERC20, Ownable {
         _rewardNFT(nftId, secondsListened);
     }
 
-    function _rewardNFT(uint256 nftId, uint256 secondsListened) public {
-        uint256 reward = _calculateReward(secondsListened);
+function _rewardNFT(uint256 nftId, uint256 secondsListened) public {
+    // Calculate reward based on seconds listened
+    uint256 rewardRate = 0.001 ether;
+    uint256 reward = secondsListened * rewardRate;
+    console.log("Seconds listened:", secondsListened);
+    console.log("Reward:", reward);
 
-        // Calculate rewards in basis points
-        uint256 originalOwnerBasisPoints = 500; // 5%
-        uint256 nftOwnerBasisPoints = 9500; // 95%
+    // Calculate rewards in basis points
+    uint256 originalOwnerBasisPoints = 500; // 5%
+    uint256 nftOwnerBasisPoints = 9500; // 95%
 
-        uint256 originalOwnerReward = (reward * originalOwnerBasisPoints) / 10000;
-        uint256 nftOwnerReward = (reward * nftOwnerBasisPoints) / 10000;
+    uint256 originalOwnerReward = (reward * originalOwnerBasisPoints) / 10000;
+    uint256 nftOwnerReward = (reward * nftOwnerBasisPoints) / 10000;
 
-        address nftOwner = harmoniaNFT.ownerOf(nftId);
-        address originalOwner = harmoniaNFT.nftOriginalOwner(nftId);
+    console.log("Original owner reward:", originalOwnerReward);
+    console.log("NFT owner reward:", nftOwnerReward);
 
-        _mint(nftOwner, nftOwnerReward);
-        _mint(originalOwner, originalOwnerReward);
-    }
+    address nftOwner = harmoniaNFT.ownerOf(nftId);
+    address originalOwner = harmoniaNFT.nftOriginalOwner(nftId);
 
-    
-function _calculateReward(uint256 secondsListened) public returns (uint256) {
+    console.log("NFT owner address:", nftOwner);
+    console.log("Original owner address:", originalOwner);
+
+    // Mint rewards to respective owners
+    _mint(nftOwner, nftOwnerReward);
+    _mint(originalOwner, originalOwnerReward);
+}
+
+
+
+
+    function _calculateReward(uint256 secondsListened) public returns (uint256) {
     totalMinted = totalSupply();
     console.log("totalMinted: ", totalMinted);
 
-    uint256 rewardBasisPoints = 17;  // Approximately 1/600 as basis points
+    // Reward rate in Harmonia tokens per second
+    uint256 rewardRate = 0.001 ether;
 
-    uint256 reward = (secondsListened * 1 ether * rewardBasisPoints) / 10000;
+    // Calculate the reward based on seconds listened
+    uint256 reward = secondsListened * rewardRate;
     console.log("Reward: ", reward);
+
     return reward;
 }
+
 
     function mint(address to, uint256 amount) public onlyOwner {
         if (to == address(0)) {
@@ -81,3 +98,4 @@ function _calculateReward(uint256 secondsListened) public returns (uint256) {
         _burn(msg.sender, amount);
     }
 }
+ 

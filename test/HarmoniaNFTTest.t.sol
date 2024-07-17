@@ -20,7 +20,7 @@ contract HarmoniaNFTTest is TestSetup {
 
     function testMintToZeroAddress() public {
         vm.startPrank(owner);
-        vm.expectRevert(abi.encodeWithSelector(HarmoniaNFT.InvalidAddress.selector));
+        vm.expectRevert(HarmoniaNFT.InvalidAddress.selector);
         harmoniaNFT.mint(address(0));
         vm.stopPrank();
     }
@@ -47,6 +47,21 @@ contract HarmoniaNFTTest is TestSetup {
         harmoniaNFT.burn(1);
         vm.stopPrank();
     }
+function testBurnNonexistentToken() public {
+    vm.startPrank(owner);
+    harmoniaNFT.mint(addr1);
+    vm.stopPrank();
+
+    // Attempt to burn a token that doesn't exist
+    vm.startPrank(addr1);
+    try harmoniaNFT.burn(999) {
+        revert("Expected NonexistentToken error");
+    } catch (bytes memory error) {
+        assertTrue(keccak256(error) == keccak256(abi.encodeWithSignature("NonexistentToken(uint256)", 999)), "Expected NonexistentToken error");
+    }
+    vm.stopPrank();
+}
+
 
     function testSetNFTOriginalOwner() public {
         vm.startPrank(owner);
@@ -91,7 +106,11 @@ function testTokenExistsFunction() public {
 
         vm.startPrank(addr1);
         harmoniaNFT.transferFrom(addr1, addr2, 1);
-        assertEq(harmoniaNFT.nftOriginalOwner(1), addr1);
+        // Assert that the original owner is still addr1
+        assertEq(harmoniaNFT.nftOriginalOwner(1), addr1, "Original owner mismatch");
+
+        // Assert that the current owner is now addr2
+        assertEq(harmoniaNFT.ownerOf(1), addr2, "Current owner mismatch");
         vm.stopPrank();
     }
 
