@@ -60,17 +60,19 @@ function testBurnNonexistentToken() public {
 }
 
 
+function testSetNFTOriginalOwner() public {
+    // Test minting to addr1 and checking original owner
+    vm.startPrank(owner);
+    harmoniaNFT.mint(addr1);
+    assertEq(harmoniaNFT.nftOriginalOwner(1), addr1, "Original owner should be addr1");
+    vm.stopPrank();
 
-    function testSetNFTOriginalOwner() public {
-        vm.startPrank(owner);
-        harmoniaNFT.mint(addr1);
-        vm.stopPrank();
-
-        // Attempt to mint again should not revert because owner is being set correctly
-        vm.startPrank(owner);
-        harmoniaNFT.mint(addr1);
-        vm.stopPrank();
-    }
+    // Test minting to addr2 and checking original owner
+    vm.startPrank(owner);
+    harmoniaNFT.mint(addr2);
+    assertEq(harmoniaNFT.nftOriginalOwner(2), addr2, "Original owner should be addr2");
+    vm.stopPrank();
+}
 
     function testBalanceIncreasesAfterMinting() public {
         vm.startPrank(owner);

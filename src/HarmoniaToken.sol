@@ -35,9 +35,9 @@ contract HarmoniaToken is ERC20, Ownable {
     }
 
 function _rewardNFT(uint256 nftId, uint256 secondsListened) public {
-    // Calculate reward based on seconds listened
-    uint256 rewardRate = 0.001 ether;
-    uint256 reward = secondsListened * rewardRate;
+    // Calculate reward based on seconds listened using the _calculateReward function
+    uint256 reward = _calculateReward(secondsListened);
+
     console.log("Seconds listened:", secondsListened);
     console.log("Reward:", reward);
 
@@ -65,8 +65,8 @@ function _rewardNFT(uint256 nftId, uint256 secondsListened) public {
 
 
 
+
     function _calculateReward(uint256 secondsListened) public returns (uint256) {
-    totalMinted = totalSupply();
     console.log("totalMinted: ", totalMinted);
 
     // Reward rate in Harmonia tokens per second
