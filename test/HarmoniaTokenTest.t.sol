@@ -104,8 +104,6 @@ contract HarmoniaTokenTest is TestSetup {
         harmoniaToken.burn(2000);
         vm.stopPrank();
     }
-    
-// Test updating listening time and reward distribution
 // Test updating listening time and reward distribution
 function testUpdateListeningTime() public {
     vm.startPrank(owner);
@@ -113,8 +111,14 @@ function testUpdateListeningTime() public {
     // Set up initial listening time and verify initial balances
     uint256 nftId = 1;
     harmoniaNFT.mint(addr1);
-    uint256 initialSecondsListened = 1; // 10 minutes
+    uint256 initialSecondsListened = 1; // 1 second baseline
+
+    // Check initial listening time (should be zero)
+    assertEq(harmoniaToken.nftListeningTime(nftId), 0);
+
+    // Update listening time and verify the mapping update
     harmoniaToken.updateListeningTime(nftId, initialSecondsListened);
+    assertEq(harmoniaToken.nftListeningTime(nftId), initialSecondsListened);
 
     // Calculate expected reward per second listened
     uint256 rewardPerSecond = 0.001 ether ; // 0.001 Harmonia per second
@@ -122,67 +126,68 @@ function testUpdateListeningTime() public {
     uint256 expectedReward = initialSecondsListened * rewardPerSecond;
     uint256 originalOwnerReward = (expectedReward * 500) / 10000; // 5% to original owner
     uint256 nftOwnerReward = expectedReward - originalOwnerReward;
-    uint balanceBefore;
-
-    //
-    balanceBefore = harmoniaToken.balanceOf(addr1);
-    assertEq(balanceBefore, nftOwnerReward);
-
 
     // Check rewards after initial update
-    assertEq(harmoniaToken.balanceOf(addr1), nftOwnerReward);
-    assertEq(harmoniaToken.balanceOf(owner), originalOwnerReward);
-
-    //
-    assertEq(harmoniaToken.balanceOf(addr1), balanceBefore + nftOwnerReward);
+    assertEq(harmoniaToken.balanceOf(addr1), expectedReward);
+    assertEq(harmoniaToken.balanceOf(owner), 0); // Owner is not the original owner in this case
 
     // Update listening time again
-    uint256 additionalSecondsListened; 
-    additionalSecondsListened = 1200; // 20 minutes
-
+    uint256 additionalSecondsListened = 1200; // 20 minutes
     harmoniaToken.updateListeningTime(nftId, additionalSecondsListened);
 
     // Calculate total reward after additional listening time
-    expectedReward += additionalSecondsListened * rewardPerSecond;
+    uint256 additionalReward = additionalSecondsListened * rewardPerSecond;
+    expectedReward = (initialSecondsListened + additionalSecondsListened) * rewardPerSecond;
     originalOwnerReward = (expectedReward * 500) / 10000; // 5% to original owner
     nftOwnerReward = expectedReward - originalOwnerReward;
 
+    // Check updated listening time
+    assertEq(harmoniaToken.nftListeningTime(nftId), initialSecondsListened + additionalSecondsListened);
+
     // Check updated rewards after additional update
-    assertEq(harmoniaToken.balanceOf(addr1), nftOwnerReward);
-    assertEq(harmoniaToken.balanceOf(owner), originalOwnerReward);
+    assertEq(harmoniaToken.balanceOf(addr1), expectedReward);
+    assertEq(harmoniaToken.balanceOf(owner), 0); // Owner is not the original owner in this case
 
     vm.stopPrank();
 }
 
-// Test suite for _rewardNFT function
+// Test rewarding an NFT owner and the original owner
 function testRewardNFT() public {
+    // Start prank as the owner
     vm.startPrank(owner);
 
-    // Mint an NFT and set initial listening time
+    // Mint an NFT to addr1
     uint256 nftId = 1;
     harmoniaNFT.mint(addr1);
+
+    // Stop prank as the owner
+    vm.stopPrank();
+
+    // Start prank as addr1 to approve the transfer
+    vm.startPrank(addr1);
+    harmoniaNFT.approve(owner, nftId);
+    vm.stopPrank();
+
+    // Start prank as the owner to transfer the NFT to addr2
+    vm.startPrank(owner);
+    harmoniaNFT.transferFrom(addr1, addr2, nftId);
+    vm.stopPrank();
+
+    // Start prank as the owner to call _rewardNFT
+    vm.startPrank(owner);
     uint256 secondsListened = 1; // 1 second baseline
-    harmoniaToken.updateListeningTime(nftId, secondsListened);
+    harmoniaToken._rewardNFT(nftId, secondsListened);
+    vm.stopPrank();
 
     // Calculate expected rewards
-    uint256 rewardRate = 0.001 ether;
     uint256 expectedReward = harmoniaToken._calculateReward(secondsListened);
     uint256 originalOwnerReward = (expectedReward * 500) / 10000; // 5% to original owner
     uint256 nftOwnerReward = expectedReward - originalOwnerReward;
 
-    // Transfer ownership of NFT from addr1 to addr2
-    harmoniaNFT.transferFrom(addr1, addr2, nftId);
-
-    // Reward NFT to addr2
-    harmoniaToken._rewardNFT(nftId, secondsListened);
-
     // Check rewards without tolerance, exact value matching
     assertEq(harmoniaToken.balanceOf(addr2), nftOwnerReward, "NFT owner reward mismatch");
-    assertEq(harmoniaToken.balanceOf(owner), originalOwnerReward, "Original owner reward mismatch");
-
-    vm.stopPrank();
+    assertEq(harmoniaToken.balanceOf(addr1), originalOwnerReward, "Original owner reward mismatch");
 }
-
 
 
 
