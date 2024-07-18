@@ -33,8 +33,6 @@ function _rewardNFT(uint256 nftId, uint256 secondsListened) public {
     // Calculate reward based on seconds listened using the _calculateReward function
     uint256 reward = _calculateReward(secondsListened);
 
-    console.log("Seconds listened:", secondsListened);
-    console.log("Reward:", reward);
 
     // Calculate rewards in basis points
     uint256 originalOwnerBasisPoints = 500; // 5%
@@ -43,14 +41,8 @@ function _rewardNFT(uint256 nftId, uint256 secondsListened) public {
     uint256 originalOwnerReward = (reward * originalOwnerBasisPoints) / 10000;
     uint256 nftOwnerReward = (reward * nftOwnerBasisPoints) / 10000;
 
-    console.log("Original owner reward:", originalOwnerReward);
-    console.log("NFT owner reward:", nftOwnerReward);
-
     address nftOwner = harmoniaNFT.ownerOf(nftId);
     address originalOwner = harmoniaNFT.nftOriginalOwner(nftId);
-
-    console.log("NFT owner address:", nftOwner);
-    console.log("Original owner address:", originalOwner);
 
     // Mint rewards to respective owners
     _mint(nftOwner, nftOwnerReward);
