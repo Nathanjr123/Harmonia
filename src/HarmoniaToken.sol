@@ -10,10 +10,10 @@ contract HarmoniaToken is ERC20, Ownable {
     error InvalidAddress(address addr);
     error InvalidAmount(uint256 amount);
 
-    uint256 public constant MAX_SUPPLY = 500_000_000 ether;
-    uint256 public constant BASE_REWARD = 100_000_000 ether;
-    uint256 public constant SECONDARY_REWARD = 100_000_000 ether;
-    uint256 public constant THIRD_REWARD = 200_000_000 ether;
+    // Calculate rewards in basis points
+    uint256 public originalOwnerBasisPoints = 500; // 5%
+    uint256 public nftOwnerBasisPoints = 9500; // 95%
+    uint256 public SCALE = 10000;
 
     uint256 public totalMinted;
     HarmoniaNFT public harmoniaNFT;
@@ -34,12 +34,9 @@ function _rewardNFT(uint256 nftId, uint256 secondsListened) public {
     uint256 reward = _calculateReward(secondsListened);
 
 
-    // Calculate rewards in basis points
-    uint256 originalOwnerBasisPoints = 500; // 5%
-    uint256 nftOwnerBasisPoints = 9500; // 95%
 
-    uint256 originalOwnerReward = (reward * originalOwnerBasisPoints) / 10000;
-    uint256 nftOwnerReward = (reward * nftOwnerBasisPoints) / 10000;
+    uint256 originalOwnerReward = (reward * originalOwnerBasisPoints) / SCALE;
+    uint256 nftOwnerReward = (reward * nftOwnerBasisPoints) / SCALE;
 
     address nftOwner = harmoniaNFT.ownerOf(nftId);
     address originalOwner = harmoniaNFT.nftOriginalOwner(nftId);
@@ -53,7 +50,7 @@ function _rewardNFT(uint256 nftId, uint256 secondsListened) public {
 
 
 
-    function _calculateReward(uint256 secondsListened) public returns (uint256) {
+    function _calculateReward(uint256 secondsListened) public pure returns (uint256) {
 
     // Reward rate in Harmonia tokens per second
     uint256 rewardRate = 0.001 ether;

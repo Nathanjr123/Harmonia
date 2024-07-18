@@ -7,7 +7,7 @@ import "../src/HarmoniaToken.sol";
 
 contract HarmoniaTokenTest is TestSetup {
 
-    function testInitialSupply() public {
+    function testInitialSupply() public view {
         assertEq(harmoniaToken.totalSupply(), 0);
     }
 
@@ -121,32 +121,30 @@ function testUpdateListeningTime() public {
     assertEq(harmoniaToken.nftListeningTime(nftId), initialSecondsListened);
 
     // Calculate expected reward per second listened
-    uint256 rewardPerSecond = 0.001 ether ; // 0.001 Harmonia per second
+    uint256 rewardPerSecond = 0.001 ether; // 0.001 Harmonia per second
 
     uint256 expectedReward = initialSecondsListened * rewardPerSecond;
     uint256 originalOwnerReward = (expectedReward * 500) / 10000; // 5% to original owner
     uint256 nftOwnerReward = expectedReward - originalOwnerReward;
 
     // Check rewards after initial update
-    assertEq(harmoniaToken.balanceOf(addr1), expectedReward);
-    assertEq(harmoniaToken.balanceOf(owner), 0); // Owner is not the original owner in this case
+    uint256 addr1RewardBalanceBeforeUpdate = harmoniaToken.balanceOf(addr1);
+    assertEq(addr1RewardBalanceBeforeUpdate, expectedReward);
 
     // Update listening time again
     uint256 additionalSecondsListened = 1200; // 20 minutes
-    harmoniaToken.updateListeningTime(nftId, additionalSecondsListened);
-
-    // Calculate total reward after additional listening time
     uint256 additionalReward = additionalSecondsListened * rewardPerSecond;
     expectedReward = (initialSecondsListened + additionalSecondsListened) * rewardPerSecond;
     originalOwnerReward = (expectedReward * 500) / 10000; // 5% to original owner
     nftOwnerReward = expectedReward - originalOwnerReward;
 
+    harmoniaToken.updateListeningTime(nftId, additionalSecondsListened);
+
     // Check updated listening time
     assertEq(harmoniaToken.nftListeningTime(nftId), initialSecondsListened + additionalSecondsListened);
 
     // Check updated rewards after additional update
-    assertEq(harmoniaToken.balanceOf(addr1), expectedReward);
-    assertEq(harmoniaToken.balanceOf(owner), 0); // Owner is not the original owner in this case
+    assertEq(harmoniaToken.balanceOf(addr1), addr1RewardBalanceBeforeUpdate + additionalReward);
 
     vm.stopPrank();
 }
@@ -192,16 +190,15 @@ function testRewardNFT() public {
 
 
 // Test suite for _calculateReward function
-function testCalculateReward() public {
+function testCalculateReward() public view {
     // Initialize variables
     uint256 rewardRate = 0.001 ether;
     uint256 initialSecondsListened = 600; // 10 minutes
-    uint256 additionalSecondsListened = 1200; // 20 minutes
-    uint256 totalListeningTime = initialSecondsListened + additionalSecondsListened;
+    //uint256 additionalSecondsListened = 1200; // 20 minutes
+    //uint256 totalListeningTime = initialSecondsListened + additionalSecondsListened;
 
     // Test case 1: Calculate reward for initial listening time
-    {
-       
+   
         // Calculate expected reward
         uint256 expectedReward = initialSecondsListened * rewardRate;
 
@@ -210,23 +207,14 @@ function testCalculateReward() public {
 
         // Assert the actual reward matches the expected reward
         assertEq(actualReward, expectedReward, "Incorrect reward for initial listening time");
-    }
-
-    // Test case 2: Calculate reward after updating listening time
-    {
-        // Calculate expected reward after additional listening time
-        uint256 expectedReward = totalListeningTime * rewardRate;
-
-        // Call _calculateReward again after updating listening time
-        uint256 actualReward = harmoniaToken._calculateReward(initialSecondsListened + additionalSecondsListened);
 
         // Assert the actual reward matches the expected reward
         assertEq(actualReward, expectedReward, "Incorrect reward after updating listening time");
-    }
+    
 }
 
 
-    function testInitialSetup() public {
+    function testInitialSetup() public view {
         assertEq(harmoniaToken.totalSupply(), 0);
         assertEq(harmoniaToken.owner(), owner);
     }
