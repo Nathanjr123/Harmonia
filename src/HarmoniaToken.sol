@@ -15,52 +15,52 @@ contract HarmoniaToken is ERC20, Ownable {
     uint256 public nftOwnerBasisPoints = 9500; // 95%
     uint256 public SCALE = 10000;
 
+    // Reward rate in Harmonia tokens per second
+    uint256 public rewardRate = 0.001 ether;
+
     uint256 public totalMinted;
     HarmoniaNFT public harmoniaNFT;
 
     mapping(uint256 => uint256) public nftListeningTime;
 
-    constructor(address _HarmoniaNFTaddress) ERC20("Harmonia", "HRM") Ownable(msg.sender) {
+    constructor(
+        address _HarmoniaNFTaddress
+    ) ERC20("Harmonia", "HRM") Ownable(msg.sender) {
         harmoniaNFT = HarmoniaNFT(_HarmoniaNFTaddress);
     }
 
-    function updateListeningTime(uint256 nftId, uint256 secondsListened) public onlyOwner {
+    function updateListeningTime(
+        uint256 nftId,
+        uint256 secondsListened
+    ) public onlyOwner {
         nftListeningTime[nftId] += secondsListened;
         _rewardNFT(nftId, secondsListened);
     }
 
-function _rewardNFT(uint256 nftId, uint256 secondsListened) public {
-    // Calculate reward based on seconds listened using the _calculateReward function
-    uint256 reward = _calculateReward(secondsListened);
+    function _rewardNFT(uint256 nftId, uint256 secondsListened) public {
+        // Calculate reward based on seconds listened using the _calculateReward function
+        uint256 reward = _calculateReward(secondsListened);
 
+        uint256 originalOwnerReward = (reward * originalOwnerBasisPoints) /
+            SCALE;
+        uint256 nftOwnerReward = (reward * nftOwnerBasisPoints) / SCALE;
 
+        address nftOwner = harmoniaNFT.ownerOf(nftId);
+        address originalOwner = harmoniaNFT.nftOriginalOwner(nftId);
 
-    uint256 originalOwnerReward = (reward * originalOwnerBasisPoints) / SCALE;
-    uint256 nftOwnerReward = (reward * nftOwnerBasisPoints) / SCALE;
+        // Mint rewards to respective owners
+        _mint(nftOwner, nftOwnerReward);
+        _mint(originalOwner, originalOwnerReward);
+    }
 
-    address nftOwner = harmoniaNFT.ownerOf(nftId);
-    address originalOwner = harmoniaNFT.nftOriginalOwner(nftId);
+    function _calculateReward(
+        uint256 secondsListened
+    ) public view returns (uint256) {
+        // Calculate the reward based on seconds listened
+        uint256 reward = secondsListened * rewardRate;
 
-    // Mint rewards to respective owners
-    _mint(nftOwner, nftOwnerReward);
-    _mint(originalOwner, originalOwnerReward);
-}
-
-
-
-
-
-    function _calculateReward(uint256 secondsListened) public pure returns (uint256) {
-
-    // Reward rate in Harmonia tokens per second
-    uint256 rewardRate = 0.001 ether;
-
-    // Calculate the reward based on seconds listened
-    uint256 reward = secondsListened * rewardRate;
-
-    return reward;
-}
-
+        return reward;
+    }
 
     function mint(address to, uint256 amount) public onlyOwner {
         if (to == address(0)) {
@@ -80,4 +80,3 @@ function _rewardNFT(uint256 nftId, uint256 secondsListened) public {
         _burn(msg.sender, amount);
     }
 }
- 

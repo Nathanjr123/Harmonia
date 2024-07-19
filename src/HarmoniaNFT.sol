@@ -9,6 +9,7 @@ contract HarmoniaNFT is ERC721, Ownable {
     error InvalidTokenId(uint256 tokenId);
     error InvalidAddress();
     error NonexistentToken(uint256 tokenId);
+    error OwnerAlreadySet();
 
     uint256 public currentTokenId = 1;
     mapping(uint256 => address) public nftOriginalOwner;
@@ -41,14 +42,19 @@ contract HarmoniaNFT is ERC721, Ownable {
 
     function setNFTOriginalOwner(uint256 nftId, address owner) internal {
         if (nftOriginalOwner[nftId] != address(0)) {
-            revert("Owner already set");
+            revert OwnerAlreadySet();
         }
         nftOriginalOwner[nftId] = owner;
     }
 
-    function _isApprovedOrOwner(address spender, uint256 tokenId) internal view returns (bool) {
+    function _isApprovedOrOwner(
+        address spender,
+        uint256 tokenId
+    ) internal view returns (bool) {
         address owner = ownerOf(tokenId);
-        return (spender == owner || getApproved(tokenId) == spender || isApprovedForAll(owner, spender));
+        return (spender == owner ||
+            getApproved(tokenId) == spender ||
+            isApprovedForAll(owner, spender));
     }
 
     // Function to check if a token exists
