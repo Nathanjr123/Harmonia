@@ -229,33 +229,35 @@ contract HarmoniaTokenTest is TestSetup {
         assertEq(harmoniaToken.totalSupply(), 0);
         assertEq(harmoniaToken.owner(), owner);
     }
+ function testGetCurrentRewardRate() public {
+    uint256 initialRewardRate = harmoniaToken.initialRewardRate();
+    uint256 decayPercentage = harmoniaToken.rewardRateDecayPercentage();
+    uint256 decayInterval = harmoniaToken.rewardRateDecayInterval();
 
-    // Test getCurrentRewardRate function to verify dynamic reward rate calculation
-    function testGetCurrentRewardRate() public {
-        uint256 initialRewardRate = harmoniaToken.initialRewardRate();
-        uint256 decayPercentage = harmoniaToken.rewardRateDecayPercentage();
-        uint256 decayInterval = harmoniaToken.rewardRateDecayInterval();
+    // Convert values to UD60x18
+    UD60x18 initialRewardRateUD = ud(initialRewardRate);
+    UD60x18 decayPercentageUD = ud(decayPercentage);
+    UD60x18 decayIntervalUD = ud(decayInterval);
 
-        // Simulate passing of time
-        uint256 intervalsPassed = 3; // 3 months
+    // Simulate passing of time
+    UD60x18 intervalsPassed = ud(3); // 3 months
 
-        // Move block timestamp forward by 3 months
-        vm.warp(block.timestamp + intervalsPassed * decayInterval);
+    // Move block timestamp forward by 3 months
+    vm.warp(block.timestamp + decayInterval * 3);
 
-        // Calculate expected reward rate
-        uint256 expectedRewardRate = initialRewardRate;
-        for (uint256 i = 0; i < intervalsPassed; i++) {
-            expectedRewardRate = (expectedRewardRate * (100 - decayPercentage)) / 100;
-        }
+    // Calculate expected reward rate
+    UD60x18 decayFactor = ud(100).sub(decayPercentageUD).div(ud(100));
+    UD60x18 expectedRewardRate = initialRewardRateUD.mul(decayFactor.pow(intervalsPassed));
 
-        // Get actual reward rate
-        uint256 actualRewardRate = harmoniaToken.getCurrentRewardRate();
+    // Get actual reward rate
+    uint256 actualRewardRate = harmoniaToken.getCurrentRewardRate();
 
-        // Assert the actual reward rate matches the expected reward rate
-        assertEq(
-            actualRewardRate,
-            expectedRewardRate,
-            "Incorrect reward rate after decay"
-        );
-    }
+    // Assert the actual reward rate matches the expected reward rate
+    assertEq(
+        actualRewardRate,
+        expectedRewardRate.unwrap(),
+        "Incorrect reward rate after decay"
+    );
+}
+
 }

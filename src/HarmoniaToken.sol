@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./HarmoniaNFT.sol";
 import "forge-std/console.sol";
+import { UD60x18,ud } from "@prb/math/src/UD60x18.sol";
 
 contract HarmoniaToken is ERC20, Ownable {
     error InvalidAddress(address addr);
@@ -24,16 +25,11 @@ contract HarmoniaToken is ERC20, Ownable {
 
     mapping(uint256 => uint256) public nftListeningTime;
 
-    constructor(
-        address _HarmoniaNFTaddress
-    ) ERC20("Harmonia", "HRM") Ownable(msg.sender) {
+    constructor(address _HarmoniaNFTaddress) ERC20("Harmonia", "HRM") Ownable(msg.sender) {
         harmoniaNFT = HarmoniaNFT(_HarmoniaNFTaddress);
     }
 
-    function updateListeningTime(
-        uint256 nftId,
-        uint256 secondsListened
-    ) public onlyOwner {
+    function updateListeningTime(uint256 nftId, uint256 secondsListened) public onlyOwner {
         nftListeningTime[nftId] += secondsListened;
         _rewardNFT(nftId, secondsListened);
     }
@@ -42,8 +38,7 @@ contract HarmoniaToken is ERC20, Ownable {
         // Calculate reward based on seconds listened using the _calculateReward function
         uint256 reward = _calculateReward(secondsListened);
 
-        uint256 originalOwnerReward = (reward * originalOwnerBasisPoints) /
-            SCALE;
+        uint256 originalOwnerReward = (reward * originalOwnerBasisPoints) / SCALE;
         uint256 nftOwnerReward = (reward * nftOwnerBasisPoints) / SCALE;
 
         address nftOwner = harmoniaNFT.ownerOf(nftId);
@@ -54,9 +49,7 @@ contract HarmoniaToken is ERC20, Ownable {
         _mint(originalOwner, originalOwnerReward);
     }
 
-    function _calculateReward(
-        uint256 secondsListened
-    ) public view returns (uint256) {
+    function _calculateReward(uint256 secondsListened) public view returns (uint256) {
         // Calculate the reward based on seconds listened and dynamic reward rate
         uint256 rewardRate = getCurrentRewardRate();
         uint256 reward = secondsListened * rewardRate;
@@ -65,17 +58,10 @@ contract HarmoniaToken is ERC20, Ownable {
     }
 
     function getCurrentRewardRate() public view returns (uint256) {
-        // Calculate the number of decay intervals that have passed
-        uint256 intervalsPassed = block.timestamp / rewardRateDecayInterval;
-        uint256 decayFactor = 100 - rewardRateDecayPercentage;
-        
-        // Calculate the current reward rate after applying decay
-        uint256 currentRewardRate = initialRewardRate;
-        for (uint256 i = 0; i < intervalsPassed; i++) {
-            currentRewardRate = (currentRewardRate * decayFactor) / 100;
-        }
-
-        return currentRewardRate;
+        UD60x18 intervalsPassed = ud(block.timestamp).div(ud(rewardRateDecayInterval));
+        UD60x18 decayFactor = ud(100 - rewardRateDecayPercentage).div(ud(100));
+        UD60x18 currentRewardRate = ud(initialRewardRate).mul(decayFactor.pow(intervalsPassed));
+        return currentRewardRate.unwrap();
     }
 
     function mint(address to, uint256 amount) public onlyOwner {
