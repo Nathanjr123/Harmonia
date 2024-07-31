@@ -10,13 +10,14 @@ contract HarmoniaToken is ERC20, Ownable {
     error InvalidAddress(address addr);
     error InvalidAmount(uint256 amount);
 
-    // Calculate rewards in basis points
     uint256 public originalOwnerBasisPoints = 500; // 5%
     uint256 public nftOwnerBasisPoints = 9500; // 95%
     uint256 public SCALE = 10000;
 
-    // Reward rate in Harmonia tokens per second
-    uint256 public rewardRate = 0.001 ether;
+    // Initial reward rate in Harmonia tokens per second
+    uint256 public initialRewardRate = 0.001 ether;
+    uint256 public rewardRateDecayPercentage = 2; // Decreases by 2% every month
+    uint256 public rewardRateDecayInterval = 30 days; // Monthly decay interval
 
     uint256 public totalMinted;
     HarmoniaNFT public harmoniaNFT;
@@ -56,10 +57,25 @@ contract HarmoniaToken is ERC20, Ownable {
     function _calculateReward(
         uint256 secondsListened
     ) public view returns (uint256) {
-        // Calculate the reward based on seconds listened
+        // Calculate the reward based on seconds listened and dynamic reward rate
+        uint256 rewardRate = getCurrentRewardRate();
         uint256 reward = secondsListened * rewardRate;
 
         return reward;
+    }
+
+    function getCurrentRewardRate() public view returns (uint256) {
+        // Calculate the number of decay intervals that have passed
+        uint256 intervalsPassed = block.timestamp / rewardRateDecayInterval;
+        uint256 decayFactor = 100 - rewardRateDecayPercentage;
+        
+        // Calculate the current reward rate after applying decay
+        uint256 currentRewardRate = initialRewardRate;
+        for (uint256 i = 0; i < intervalsPassed; i++) {
+            currentRewardRate = (currentRewardRate * decayFactor) / 100;
+        }
+
+        return currentRewardRate;
     }
 
     function mint(address to, uint256 amount) public onlyOwner {

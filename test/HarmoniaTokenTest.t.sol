@@ -94,6 +94,7 @@ contract HarmoniaTokenTest is TestSetup {
         harmoniaToken.burn(2000);
         vm.stopPrank();
     }
+
     // Test updating listening time and reward distribution
     function testUpdateListeningTime() public {
         vm.startPrank(owner);
@@ -103,8 +104,8 @@ contract HarmoniaTokenTest is TestSetup {
         harmoniaNFT.mint(addr1);
         uint256 initialSecondsListened = 1; // 1 second baseline
 
-        // Calculate expected reward per second listened
-        uint256 rewardPerSecond = harmoniaToken.rewardRate(); // 0.001 Harmonia per second
+        // Calculate expected reward per second listened using dynamic reward rate
+        uint256 rewardPerSecond = harmoniaToken.getCurrentRewardRate(); // Dynamic reward rate
         uint256 expectedReward = initialSecondsListened * rewardPerSecond;
 
         // Check initial listening time (should be zero)
@@ -167,7 +168,7 @@ contract HarmoniaTokenTest is TestSetup {
         harmoniaToken._rewardNFT(nftId, secondsListened);
         vm.stopPrank();
 
-        // Calculate expected rewards
+        // Calculate expected rewards using dynamic reward rate
         uint256 expectedReward = harmoniaToken._calculateReward(
             secondsListened
         );
@@ -190,12 +191,11 @@ contract HarmoniaTokenTest is TestSetup {
     // Test suite for _calculateReward function
     function testCalculateReward() public view {
         // Initialize variables
-        uint256 rewardRate = 0.001 ether;
         uint256 initialSecondsListened = 600; // 10 minutes
         uint256 additionalSecondsListened = 1200; // 20 minutes
 
-        // Calculate expected reward
-        uint256 expectedReward = initialSecondsListened * rewardRate;
+        // Calculate expected reward using dynamic reward rate
+        uint256 expectedReward = initialSecondsListened * harmoniaToken.getCurrentRewardRate();
 
         // Call _calculateReward and capture actual reward
         uint256 actualReward = harmoniaToken._calculateReward(
@@ -209,8 +209,8 @@ contract HarmoniaTokenTest is TestSetup {
             "Incorrect reward for initial listening time"
         );
 
-        // Calculate expected reward
-        expectedReward = additionalSecondsListened * rewardRate;
+        // Calculate expected reward for additional seconds listened
+        expectedReward = additionalSecondsListened * harmoniaToken.getCurrentRewardRate();
 
         // Call _calculateReward and capture actual reward
         actualReward = harmoniaToken._calculateReward(
@@ -228,5 +228,34 @@ contract HarmoniaTokenTest is TestSetup {
     function testInitialSetup() public view {
         assertEq(harmoniaToken.totalSupply(), 0);
         assertEq(harmoniaToken.owner(), owner);
+    }
+
+    // Test getCurrentRewardRate function to verify dynamic reward rate calculation
+    function testGetCurrentRewardRate() public {
+        uint256 initialRewardRate = harmoniaToken.initialRewardRate();
+        uint256 decayPercentage = harmoniaToken.rewardRateDecayPercentage();
+        uint256 decayInterval = harmoniaToken.rewardRateDecayInterval();
+
+        // Simulate passing of time
+        uint256 intervalsPassed = 3; // 3 months
+
+        // Move block timestamp forward by 3 months
+        vm.warp(block.timestamp + intervalsPassed * decayInterval);
+
+        // Calculate expected reward rate
+        uint256 expectedRewardRate = initialRewardRate;
+        for (uint256 i = 0; i < intervalsPassed; i++) {
+            expectedRewardRate = (expectedRewardRate * (100 - decayPercentage)) / 100;
+        }
+
+        // Get actual reward rate
+        uint256 actualRewardRate = harmoniaToken.getCurrentRewardRate();
+
+        // Assert the actual reward rate matches the expected reward rate
+        assertEq(
+            actualRewardRate,
+            expectedRewardRate,
+            "Incorrect reward rate after decay"
+        );
     }
 }
