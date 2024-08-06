@@ -6,6 +6,9 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "../src/HarmoniaToken.sol";
 
 contract HarmoniaTokenTest is TestSetup {
+    uint256 rewardRate = 0.001 ether;
+    uint256 rewardRateDecayBps = 200;
+
     function testInitialSupply() public view {
         assertEq(harmoniaToken.totalSupply(), 0);
     }
@@ -117,7 +120,7 @@ contract HarmoniaTokenTest is TestSetup {
 
         // Check rewards after initial update
         uint256 addr1RewardBalanceBeforeUpdate = harmoniaToken.balanceOf(addr1);
-        assertEq(addr1RewardBalanceBeforeUpdate, expectedReward - 1);//just a minor of by 1 to make sure tests pass
+        assertEq(addr1RewardBalanceBeforeUpdate, expectedReward);
 
         // Update listening time again
         uint256 additionalSecondsListened = 1200; // 20 minutes
@@ -136,90 +139,85 @@ contract HarmoniaTokenTest is TestSetup {
             harmoniaToken.balanceOf(addr1),
             addr1RewardBalanceBeforeUpdate + additionalReward
         );
-        
 
         vm.stopPrank();
     }
-function testRewardNFT() public {
-    // Start prank as the owner
-    vm.startPrank(owner);
+    function testRewardNFT() public {
+        // Start prank as the owner
+        vm.startPrank(owner);
 
-    // Mint an NFT to addr1
-    uint256 nftId = 1;
-    harmoniaNFT.mint(addr1);
+        // Mint an NFT to addr1
+        uint256 nftId = 1;
+        harmoniaNFT.mint(addr1);
 
-    // Stop prank as the owner
-    vm.stopPrank();
+        // Stop prank as the owner
+        vm.stopPrank();
 
-    // Start prank as addr1 to approve the transfer
-    vm.startPrank(addr1);
-    harmoniaNFT.approve(owner, nftId);
-    vm.stopPrank();
+        // Start prank as addr1 to approve the transfer
+        vm.startPrank(addr1);
+        harmoniaNFT.approve(owner, nftId);
+        vm.stopPrank();
 
-    // Start prank as the owner to transfer the NFT to addr2
-    vm.startPrank(owner);
-    harmoniaNFT.transferFrom(addr1, addr2, nftId);
-    vm.stopPrank();
+        // Start prank as the owner to transfer the NFT to addr2
+        vm.startPrank(owner);
+        harmoniaNFT.transferFrom(addr1, addr2, nftId);
+        vm.stopPrank();
 
-    // Start prank as the owner to call _rewardNFT
-    vm.startPrank(owner);
-    uint256 secondsListened = 1; // 1 second baseline
-    harmoniaToken._rewardNFT(nftId, secondsListened);
-    vm.stopPrank();
+        // Start prank as the owner to call _rewardNFT
+        vm.startPrank(owner);
+        uint256 secondsListened = 1; // 1 second baseline
+        harmoniaToken._rewardNFT(nftId, secondsListened);
+        vm.stopPrank();
 
-    // Calculate expected rewards using dynamic reward rate
-    uint256 expectedReward = harmoniaToken._calculateReward(
-        secondsListened
-    );
-    uint256 originalOwnerReward = (expectedReward * 500) / 10000; // 5% to original owner
-    uint256 nftOwnerReward = expectedReward - originalOwnerReward;
+        // Calculate expected rewards using dynamic reward rate
+        uint256 expectedReward = harmoniaToken._calculateReward(
+            secondsListened
+        );
+        uint256 originalOwnerReward = (expectedReward * 500) / 10000; // 5% to original owner
+        uint256 nftOwnerReward = expectedReward - originalOwnerReward;
 
-    // Check rewards without tolerance, exact value matching
-    // Use a tolerance of 1 wei to account for minor precision issues
-    assertApproxEqAbs(
-        harmoniaToken.balanceOf(addr2),
-        nftOwnerReward,
-        1,
-        "NFT owner reward mismatch"
-    );
-    assertApproxEqAbs(
-        harmoniaToken.balanceOf(addr1),
-        originalOwnerReward,
-        1,
-        "Original owner reward mismatch"
-    );
-}
-
+        // Check rewards without tolerance, exact value matching
+        // Use a tolerance of 1 wei to account for minor precision issues
+        assertApproxEqAbs(
+            harmoniaToken.balanceOf(addr2),
+            nftOwnerReward,
+            1,
+            "NFT owner reward mismatch"
+        );
+        assertApproxEqAbs(
+            harmoniaToken.balanceOf(addr1),
+            originalOwnerReward,
+            1,
+            "Original owner reward mismatch"
+        );
+    }
 
     // Test suite for _calculateReward function
-    function testCalculateReward() public view {
+    function testCalculateReward() public {
         // Initialize variables
         uint256 initialSecondsListened = 600; // 10 minutes
         uint256 additionalSecondsListened = 1200; // 20 minutes
-
         // Calculate expected reward using dynamic reward rate
-        uint256 expectedReward = initialSecondsListened * harmoniaToken.getCurrentRewardRate();
-
+        uint256 expectedReward = initialSecondsListened *
+            harmoniaToken.getCurrentRewardRate();
         // Call _calculateReward and capture actual reward
         uint256 actualReward = harmoniaToken._calculateReward(
             initialSecondsListened
         );
-
         // Assert the actual reward matches the expected reward
         assertEq(
             actualReward,
             expectedReward,
             "Incorrect reward for initial listening time"
         );
-
         // Calculate expected reward for additional seconds listened
-        expectedReward = additionalSecondsListened * harmoniaToken.getCurrentRewardRate();
-
+        expectedReward =
+            additionalSecondsListened *
+            harmoniaToken.getCurrentRewardRate();
         // Call _calculateReward and capture actual reward
         actualReward = harmoniaToken._calculateReward(
             additionalSecondsListened
         );
-
         // Assert the actual reward matches the expected reward
         assertEq(
             actualReward,
@@ -232,36 +230,50 @@ function testRewardNFT() public {
         assertEq(harmoniaToken.totalSupply(), 0);
         assertEq(harmoniaToken.owner(), owner);
     }
-function testGetCurrentRewardRate() public {
-    uint256 initialRewardRate = harmoniaToken.initialRewardRate();
-    uint256 decayPercentage = harmoniaToken.rewardRateDecayPercentage();
-    uint256 decayInterval = harmoniaToken.rewardRateDecayInterval();
 
-    // Convert values to UD60x18
-    UD60x18 initialRewardRateUD = ud(initialRewardRate);
-    UD60x18 decayPercentageUD = ud(decayPercentage);
+    // Test getCurrentRewardRate function to verify dynamic reward rate calculation
+    function testGetCurrentRewardRate() public {
+        uint256 initialRewardRate = harmoniaToken.rewardRate();
+        assertEq(initialRewardRate, 0.001 ether);
 
-    // Simulate passing of time
-    UD60x18 intervalsPassed = ud(3); // 3 months
+        // Simulate passing of time -> 1 interval
+        skip(30 days);
+        uint256 currentRewardRate = harmoniaToken.getCurrentRewardRate();
+        uint256 expectedRewardRate = _getExpectedRewardRate();
 
-    // Move block timestamp forward by 3 months
-    vm.warp(block.timestamp + decayInterval * 3);
+        assertEq(currentRewardRate, expectedRewardRate);
 
-    // Calculate expected reward rate
-    UD60x18 decayFactor = ud(100).sub(decayPercentageUD).div(ud(100));
-    UD60x18 expectedRewardRate = initialRewardRateUD.mul(decayFactor.pow(intervalsPassed));
+        // Simulate passing of time -> 2 intervals
+        skip(30 days);
+        currentRewardRate = harmoniaToken.getCurrentRewardRate();
+        expectedRewardRate = _getExpectedRewardRate();
 
-    // Get actual reward rate
-    UD60x18 actualRewardRate = ud(harmoniaToken.getCurrentRewardRate());
+        assertEq(currentRewardRate, expectedRewardRate);
 
-    // Check if the actual reward rate is within 1% of the expected reward rate
-    assertApproxEqual(actualRewardRate, expectedRewardRate, ud(1), "Incorrect reward rate after decay");
-}
+        // Simulate passing of time -> 3 intervals
+        skip(30 days);
+        currentRewardRate = harmoniaToken.getCurrentRewardRate();
+        expectedRewardRate = _getExpectedRewardRate();
 
-function assertApproxEqual(UD60x18 a, UD60x18 b, UD60x18 tolerancePercent, string memory message) internal pure {
-    UD60x18 maxDelta = a > b ? a.sub(b) : b.sub(a);
-    maxDelta = maxDelta.mul(tolerancePercent).div(ud(100));
-    require(maxDelta.unwrap() <= tolerancePercent.unwrap(), message);
-}
+        assertEq(currentRewardRate, expectedRewardRate);
+    }
 
+    function _getExpectedRewardRate() internal returns (uint256) {
+        uint256 intervalsPassed = (block.timestamp -
+            harmoniaToken.startTime()) / 30 days;
+
+        if (intervalsPassed == 0) {
+            return rewardRate;
+        }
+
+        rewardRateDecayBps = rewardRateDecayBps * intervalsPassed;
+
+        uint256 percentage = (rewardRate * rewardRateDecayBps) / 10000;
+
+        uint256 newRate = rewardRate - percentage;
+
+        rewardRate = newRate;
+
+        return newRate;
+    }
 }
