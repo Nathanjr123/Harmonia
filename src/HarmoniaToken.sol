@@ -70,6 +70,7 @@ contract HarmoniaToken is ERC20, Ownable {
         return reward;
     }
 
+    // The Dynamic Rewards are 2% of 0.001 ether on month 1, then 4% of 0.001 ether on month 2 etc...
     function getCurrentRewardRate() public returns (uint256) {
         // Get the intervals of time passed since contract was deployed.
         uint256 intervalsPassed = (block.timestamp - startTime) / 30 days;
@@ -80,18 +81,15 @@ contract HarmoniaToken is ERC20, Ownable {
         }
 
         // Calculate the decayed reward rate using percentage basis points
-        rewardRateDecayBps = rewardRateDecayBps * intervalsPassed;
+        uint256 decayRate = rewardRateDecayBps * intervalsPassed;
 
         // Work out the percentage to decrease the reward rate by
-        uint256 percentage = (rewardRate * rewardRateDecayBps) / 10000;
+        uint256 percentage = (rewardRate * decayRate) / 10000;
 
         // Calculate the new reward rate
         uint256 newRate = rewardRate - percentage;
 
-        // Update the reward rate variable to be the new rewardRate
-        rewardRate = newRate;
-
-        // Return th enew Reward Rate
+        // Return the new Reward Rate
         return newRate;
     }
 

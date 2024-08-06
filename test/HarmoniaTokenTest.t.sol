@@ -240,6 +240,8 @@ contract HarmoniaTokenTest is TestSetup {
         skip(30 days);
         uint256 currentRewardRate = harmoniaToken.getCurrentRewardRate();
         uint256 expectedRewardRate = _getExpectedRewardRate();
+        console.log("Current Reward Rate: ", currentRewardRate);
+        console.log("Expected Reward Rate: ", expectedRewardRate);
 
         assertEq(currentRewardRate, expectedRewardRate);
 
@@ -247,6 +249,8 @@ contract HarmoniaTokenTest is TestSetup {
         skip(30 days);
         currentRewardRate = harmoniaToken.getCurrentRewardRate();
         expectedRewardRate = _getExpectedRewardRate();
+        console.log("Current Reward Rate: ", currentRewardRate);
+        console.log("Expected Reward Rate: ", expectedRewardRate);
 
         assertEq(currentRewardRate, expectedRewardRate);
 
@@ -254,6 +258,10 @@ contract HarmoniaTokenTest is TestSetup {
         skip(30 days);
         currentRewardRate = harmoniaToken.getCurrentRewardRate();
         expectedRewardRate = _getExpectedRewardRate();
+        console.log("Current Reward Rate: ", currentRewardRate);
+        console.log("Expected Reward Rate: ", expectedRewardRate);
+        // 0.00094 ether = 0.001 ether - 6%
+        assertEq(currentRewardRate, 0.00094 ether);
 
         assertEq(currentRewardRate, expectedRewardRate);
     }
@@ -266,13 +274,11 @@ contract HarmoniaTokenTest is TestSetup {
             return rewardRate;
         }
 
-        rewardRateDecayBps = rewardRateDecayBps * intervalsPassed;
+        uint256 decayRate = rewardRateDecayBps * intervalsPassed;
 
-        uint256 percentage = (rewardRate * rewardRateDecayBps) / 10000;
+        uint256 percentage = (rewardRate * decayRate) / 10000;
 
         uint256 newRate = rewardRate - percentage;
-
-        rewardRate = newRate;
 
         return newRate;
     }
