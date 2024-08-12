@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./HarmoniaNFT.sol";
 import "forge-std/console.sol";
+import {UD60x18, ud} from "@prb/math/src/UD60x18.sol";
 
 contract HarmoniaToken is ERC20, Ownable {
     error InvalidAddress(address addr);
@@ -15,8 +16,11 @@ contract HarmoniaToken is ERC20, Ownable {
     uint256 public SCALE = 10000;
 
     // Initial reward rate in Harmonia tokens per second
-    uint256 public initialRewardRate = 0.001 ether;
-    uint256 public rewardRateDecayPercentage = 2; // Decreases by 2% every month
+    uint256 public rewardRate;
+
+    // Added startTime variable to track reward intervals passed
+    uint256 public startTime;
+    uint256 public rewardRateDecayBps = 200; // Decreases by 2% in basis points every month
     uint256 public rewardRateDecayInterval = 30 days; // Monthly decay interval
 
     uint256 public totalMinted;
@@ -28,6 +32,8 @@ contract HarmoniaToken is ERC20, Ownable {
         address _HarmoniaNFTaddress
     ) ERC20("Harmonia", "HRM") Ownable(msg.sender) {
         harmoniaNFT = HarmoniaNFT(_HarmoniaNFTaddress);
+        rewardRate = 0.001 ether;
+        startTime = block.timestamp;
     }
 
     function updateListeningTime(
@@ -56,26 +62,35 @@ contract HarmoniaToken is ERC20, Ownable {
 
     function _calculateReward(
         uint256 secondsListened
-    ) public view returns (uint256) {
+    ) public returns (uint256) {
         // Calculate the reward based on seconds listened and dynamic reward rate
-        uint256 rewardRate = getCurrentRewardRate();
-        uint256 reward = secondsListened * rewardRate;
+        uint256 _rewardRate = getCurrentRewardRate();
+        uint256 reward = secondsListened * _rewardRate;
 
         return reward;
     }
 
-    function getCurrentRewardRate() public view returns (uint256) {
-        // Calculate the number of decay intervals that have passed
-        uint256 intervalsPassed = block.timestamp / rewardRateDecayInterval;
-        uint256 decayFactor = 100 - rewardRateDecayPercentage;
-        
-        // Calculate the current reward rate after applying decay
-        uint256 currentRewardRate = initialRewardRate;
-        for (uint256 i = 0; i < intervalsPassed; i++) {
-            currentRewardRate = (currentRewardRate * decayFactor) / 100;
+    // The Dynamic Rewards are 2% of 0.001 ether on month 1, then 4% of 0.001 ether on month 2 etc...
+    function getCurrentRewardRate() public returns (uint256) {
+        // Get the intervals of time passed since contract was deployed.
+        uint256 intervalsPassed = (block.timestamp - startTime) / 30 days;
+
+        // If no intervals passed rewardRate remains the same
+        if (intervalsPassed == 0) {
+            return rewardRate;
         }
 
-        return currentRewardRate;
+        // Calculate the decayed reward rate using percentage basis points
+        uint256 decayRate = rewardRateDecayBps * intervalsPassed;
+
+        // Work out the percentage to decrease the reward rate by
+        uint256 percentage = (rewardRate * decayRate) / 10000;
+
+        // Calculate the new reward rate
+        uint256 newRate = rewardRate - percentage;
+
+        // Return the new Reward Rate
+        return newRate;
     }
 
     function mint(address to, uint256 amount) public onlyOwner {
