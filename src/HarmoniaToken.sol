@@ -1,13 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
-
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UpgradeableProxy.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./HarmoniaNFT.sol";
 import "forge-std/console.sol";
 import {UD60x18, ud} from "@prb/math/src/UD60x18.sol";
 
-contract HarmoniaToken is ERC20, Ownable {
+contract HarmoniaToken is ERC20, Ownable,  UUPSUpgradeable, Initializable {
     error InvalidAddress(address addr);
     error InvalidAmount(uint256 amount);
 
@@ -28,13 +30,15 @@ contract HarmoniaToken is ERC20, Ownable {
 
     mapping(uint256 => uint256) public nftListeningTime;
 
-    constructor(
-        address _HarmoniaNFTaddress
-    ) ERC20("Harmonia", "HRM") Ownable(msg.sender) {
-        harmoniaNFT = HarmoniaNFT(_HarmoniaNFTaddress);
-        rewardRate = 0.001 ether;
-        startTime = block.timestamp;
-    }
+function initialize(address _HarmoniaNFTaddress) public initializer {
+    __ERC20_init("Harmonia", "HRM");
+    __Ownable_init();
+    harmoniaNFT = HarmoniaNFT(_HarmoniaNFTaddress);
+    rewardRate = 0.001 ether;
+    startTime = block.timestamp;
+}
+
+function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     function updateListeningTime(
         uint256 nftId,
