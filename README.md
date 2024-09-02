@@ -1,7 +1,3 @@
-Here's an updated README file with relevant details for your project:
-
----
-
 ## Harmonia Project
 
 ### Overview
